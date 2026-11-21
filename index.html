@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bussola ATA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: guscio da telefono (colonna unica, max 560px), testata blu notte, schede in basso, una vista per volta. */
+:root{
+  color-scheme: light;
+  --navy:#0A1D3B; --navy-2:#122A4C; --navy-3:#1C3A63;
+  --orange:#E87722; --orange-ink:#B4530C; --cream:#FDF1E6;
+  --sky:#4A9FE0;
+  --paper:#F2F4F8; --card:#FFFFFF; --ink:#0F2038; --muted:#55657C; --line:#DAE0EA;
+  --ok:#23884C; --ok-bg:#E8F5ED; --no:#C0333A; --no-bg:#FCEBEC; --mid:#A86E00; --mid-bg:#FFF4D9;
+  --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r:14px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.2}
+p{margin:0}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:6px}
+.shell{max-width:560px;margin:0 auto;min-height:100%;padding-bottom:86px;position:relative}
+
+/* testata */
+.top{background:var(--navy);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 16px}
+.top img{height:38px;width:auto;display:block}
+.top .name{font-weight:700;letter-spacing:.02em;font-size:16px;line-height:1.1}
+.top .name span{color:var(--orange)}
+.top .by{font-size:11px;color:#A9B8CF;font-weight:400}
+.top .grow{flex:1}
+.iconbtn{background:var(--navy-2);border:1px solid var(--navy-3);color:#fff;width:40px;height:40px;border-radius:50%;font-weight:600;cursor:pointer}
+.iconbtn:hover{background:var(--navy-3)}
+
+/* viste */
+.view{display:none}
+.view.on{display:block}
+.hero{background:var(--navy);color:#fff;padding:14px 16px 56px;position:relative;overflow:hidden}
+.hero h1{font-size:25px;font-weight:700;max-width:15em}
+.hero h1 em{font-style:normal;color:var(--orange)}
+.hero p{color:#C3CFE0;margin-top:8px;max-width:30em;font-size:14px}
+.hero .rule{width:44px;height:4px;background:var(--orange);border-radius:2px;margin:12px 0 0}
+.rose{position:absolute;right:-34px;top:-10px;width:170px;height:170px;opacity:.32;pointer-events:none}
+.rose .needle{transform-origin:50% 50%;transform:rotate(28deg)}
+.busy .rose .needle{animation:spin 1.6s cubic-bezier(.5,.1,.5,.9) infinite}
+@keyframes spin{to{transform:rotate(388deg)}}
+.body{padding:0 16px;display:flex;flex-direction:column;gap:14px}
+.lift{margin-top:-40px;position:relative}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card.raised{box-shadow:0 10px 26px rgba(10,29,59,.14);border-color:transparent}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--orange-ink)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* campi */
+.lab{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+textarea,input[type=text],input[type=search]{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff;resize:vertical}
+textarea{min-height:104px}
+textarea:focus,input:focus{border-color:var(--sky);outline:none;box-shadow:0 0 0 3px rgba(74,159,224,.25)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn{text-decoration:none;border:0;border-radius:12px;padding:13px 18px;font-weight:600;cursor:pointer;background:var(--orange);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+.btn:hover{background:#D56A18}
+.btn[disabled]{opacity:.55;cursor:default}
+.btn.wide{width:100%}
+.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line);min-height:42px;padding:9px 14px}
+.btn.ghost:hover{background:var(--paper)}
+.btn.dark{background:var(--navy)}
+.chips{display:flex;flex-direction:column;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;font-size:14px}
+.chip:hover{background:var(--cream)}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.status i{width:8px;height:8px;border-radius:50%;background:#B8C2D1;display:inline-block}
+.status.on i{background:var(--ok)} .status.off i{background:var(--no)}
+
+/* risposta */
+.answer{display:flex;flex-direction:column;gap:12px}
+.lead{font-size:17px;font-weight:500;line-height:1.45}
+.alert{background:var(--no-bg);border-left:5px solid var(--no);border-radius:10px;padding:12px 14px;color:#7C1C22}
+.alert b{display:block;margin-bottom:2px}
+.note{background:var(--cream);border-left:5px solid var(--orange);border-radius:10px;padding:12px 14px;color:#6B3A0C}
+.lights{display:flex;flex-direction:column;gap:8px}
+.light{display:flex;gap:12px;border-radius:12px;padding:11px 12px;align-items:flex-start}
+.light .dot{flex:none;width:22px;height:22px;border-radius:50%;margin-top:1px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.14)}
+.light .t{font-weight:700;font-size:12px;letter-spacing:.06em}
+.light ul{margin:2px 0 0;padding-left:18px}
+.light.g{background:var(--ok-bg)} .light.g .dot{background:var(--ok)} .light.g .t{color:var(--ok)}
+.light.r{background:var(--no-bg)} .light.r .dot{background:var(--no)} .light.r .t{color:var(--no)}
+.light.y{background:var(--mid-bg)} .light.y .dot{background:#E0A419} .light.y .t{color:var(--mid)}
+.sec h3{font-size:14px;font-weight:700;margin-bottom:4px}
+.who{display:inline-block;background:var(--navy);color:#fff;border-radius:999px;padding:4px 12px;font-weight:600;font-size:13px;margin-bottom:6px}
+.letter{background:#fff;border:1px solid var(--line);border-left:5px solid var(--orange);border-radius:10px;padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.lvl{display:flex;gap:12px;align-items:center}
+.lvl .n{flex:none;width:42px;height:42px;border-radius:10px;color:#fff;font-weight:700;font-size:20px;display:grid;place-items:center}
+.l0,.l1{background:var(--sky)} .l2{background:#2B78BE} .l3,.l4{background:var(--orange)} .l5{background:var(--no)} .l6{background:#8C2A2E}
+ul.plain{margin:0;padding-left:18px}
+.loader{display:flex;gap:12px;align-items:center}
+.loader svg{width:38px;height:38px;flex:none}
+.loader .needle{transform-origin:50% 50%;animation:spin 1.6s cubic-bezier(.5,.1,.5,.9) infinite}
+
+select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff}
+.fields{display:flex;flex-direction:column;gap:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.topic{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.topic summary{cursor:pointer;padding:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.topic summary::-webkit-details-marker{display:none}
+.topic summary::after{content:"+";color:var(--orange);font-weight:700;font-size:20px;line-height:1}
+.topic[open] summary::after{content:"–"}
+.topic[open] summary{border-bottom:1px solid var(--line)}
+.topic .tb{padding:14px;display:flex;flex-direction:column;gap:12px}
+/* atti */
+.cat{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--orange-ink);padding:4px 2px}
+.acts{display:flex;flex-direction:column;gap:6px}
+.act{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;cursor:pointer;width:100%}
+.act:hover{border-color:var(--orange)}
+.act .num{font-weight:700;color:#9AA7BA;font-variant-numeric:tabular-nums;font-size:13px;flex:none;width:22px}
+.act .arr{margin-left:auto;color:var(--orange);font-weight:700}
+.head{padding:18px 16px 4px}
+.head h1{font-size:23px}
+.head p{color:var(--muted);margin-top:6px}
+.head .rule{width:44px;height:4px;background:var(--orange);border-radius:2px;margin-top:10px}
+.back{background:none;border:0;color:var(--orange-ink);font-weight:600;cursor:pointer;padding:6px 0}
+
+/* livello */
+.ladder{display:flex;flex-direction:column;gap:6px}
+.step{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;opacity:.5}
+.step.cur{opacity:1;border-color:var(--navy);box-shadow:0 4px 14px rgba(10,29,59,.12)}
+.step .n{flex:none;width:40px;align-self:stretch;display:grid;place-items:center;color:#fff;font-weight:700}
+.step .x{padding:8px 10px 8px 0}
+.step b{display:block;font-size:14px}
+.step span{font-size:12.5px;color:var(--muted)}
+.checks{display:flex;flex-direction:column;gap:6px}
+.check{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer}
+.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--orange);flex:none}
+.check:has(input:checked){border-color:var(--orange);background:var(--cream)}
+
+/* a chi */
+.person{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+.person h3{font-size:15px}
+.person .role{font-size:12.5px;color:var(--orange-ink);font-weight:600;margin:1px 0 5px}
+
+/* schede in basso */
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--navy);z-index:5;padding-bottom:env(safe-area-inset-bottom)}
+.tabs nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs a{color:#A9B8CF;text-decoration:none;font-size:11.5px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 10px;border-top:3px solid transparent}
+.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs a[aria-current=page]{color:#fff;border-top-color:var(--orange)}
+.tabs a[aria-current=page] svg{stroke:var(--orange)}
+
+/* scheda informazioni */
+dialog{border:0;border-radius:18px;padding:0;max-width:min(520px,calc(100% - 24px));width:100%;color:var(--ink);font-family:var(--font)}
+dialog::backdrop{background:rgba(10,29,59,.6)}
+.dlg-h{background:var(--navy);color:#fff;padding:18px;display:flex;gap:14px;align-items:center}
+.dlg-h img{height:92px;width:auto;border-radius:8px}
+.dlg-b{padding:16px;display:flex;flex-direction:column;gap:14px}
+.dlg-b h3{font-size:15px;margin-bottom:4px}
+.dlg-b ol,.dlg-b ul{margin:0;padding-left:20px}
+.quote{background:var(--navy);color:#fff;border-top:4px solid var(--orange);border-radius:12px;padding:16px;text-align:center;font-size:15px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;z-index:9;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.busy .rose .needle,.loader .needle{animation:none}.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+  <header class="top">
+    <img src="data:image/png;base64,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" alt="Nashira Studio">
+    <div>
+      <div class="name">BUSSOLA <span>ATA</span></div>
+      <div class="by">di Marco Perini · Nashira Studio</div>
+    </div>
+    <div class="grow"></div>
+    <button class="iconbtn" id="infoBtn" aria-label="Informazioni e limiti">i</button>
+  </header>
+
+  <!-- CHIEDI -->
+  <main class="view" id="v-chiedi">
+    <section class="hero">
+      <svg class="rose" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#1C3A63" stroke-width="2"/>
+        <circle cx="50" cy="50" r="33" fill="none" stroke="#1C3A63" stroke-width="1" stroke-dasharray="2 5"/>
+        <g class="needle"><path d="M50 12 L57 50 L50 56 L43 50 Z" fill="#E87722"/><path d="M50 88 L57 50 L50 44 L43 50 Z" fill="#4A6C9B"/></g>
+        <circle cx="50" cy="50" r="3.5" fill="#fff"/>
+      </svg>
+      <h1 id="heroH">Che cosa ti è <em>successo</em> oggi?</h1>
+      <div class="rule"></div>
+      <p id="heroP">Raccontalo come a una collega. Ti dico se ti compete, a chi rivolgerti e ti scrivo le parole giuste.</p>
+    </section>
+    <div class="body lift" id="chiediBody">
+      <form class="card raised" id="askForm">
+        <label class="lab" for="q">Il fatto, con date e orari se li ricordi</label>
+        <textarea id="q" placeholder="Es. Stamattina una maestra mi ha chiesto di…" maxlength="4000"></textarea>
+        <div style="margin-top:12px">
+          <div class="lab" id="lab-ordine">Dove lavori</div>
+          <div class="seg" id="seg-ordine" role="group" aria-labelledby="lab-ordine"></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="lab" id="lab-contr">Il tuo contratto</div>
+          <div class="seg" id="seg-contr" role="group" aria-labelledby="lab-contr"></div>
+        </div>
+        <button class="btn wide" id="askBtn" type="submit" style="margin-top:14px" hidden>Chiedi a Bussola</button>
+        <div class="row" style="margin-top:8px" id="aiRow" hidden>
+          <span class="status on" id="aiStatus"><i></i><span>Assistente pronto: la risposta arriva qui</span></span>
+        </div>
+        <div class="lab" id="handLab" style="margin-top:14px">Chiedi con</div>
+        <div class="two" role="group" aria-labelledby="handLab">
+          <a class="btn dark" id="goGemini" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+          <a class="btn dark" id="goClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
+        </div>
+        <p class="small muted" id="handHint" style="margin-top:8px">La domanda viene copiata e si apre l'app scelta: tieni premuto nel campo del messaggio, tocca Incolla e invia. In Claude la trovi già scritta.</p>
+        <p class="small muted" style="margin-top:8px">Non scrivere nomi di alunni, colleghi o famiglie e niente dati sulla salute: usa «un alunno», «una collega».</p>
+      </form>
+
+      <div id="answerBox" class="answer" aria-live="polite"></div>
+
+      <section id="examples">
+        <div class="cat">Le domande più frequenti</div>
+        <div class="chips" id="chips"></div>
+      </section>
+      <section>
+        <div class="cat">Orientati per argomento</div>
+        <div class="body" id="topicList" style="padding:0;gap:8px"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ATTI -->
+  <main class="view" id="v-atti">
+    <div id="actList">
+      <div class="head">
+        <h1>Gli atti, già scritti</h1>
+        <div class="rule"></div>
+        <p>Scegli l'atto e compila pochi campi: la lettera esce completa, con destinatario, oggetto, richiesta e chiusura.</p>
+      </div>
+      <div class="body" id="actCats" style="margin-top:10px"></div>
+    </div>
+    <div id="actEdit" hidden>
+      <div class="head">
+        <button class="back" id="actBack">‹ Tutti gli atti</button>
+        <div class="eyebrow" id="actCat"></div>
+        <h1 id="actTitle" tabindex="-1"></h1>
+        <div class="rule"></div>
+      </div>
+      <div class="body" style="margin-top:12px">
+        <form class="card" id="actForm">
+          <div class="fields" id="actFields"></div>
+          <div class="cat" style="margin-top:16px">I tuoi dati (restano su questo dispositivo)</div>
+          <div class="fields" style="margin-top:6px">
+            <div><label class="lab" for="meNome">Nome e cognome</label><input type="text" id="meNome" maxlength="120" autocomplete="name"></div>
+            <div><label class="lab" for="meIst">Istituto</label><input type="text" id="meIst" maxlength="160" placeholder="es. Istituto Comprensivo di …"></div>
+            <div class="two">
+              <div><label class="lab" for="meLuogo">Luogo</label><input type="text" id="meLuogo" maxlength="80"></div>
+              <div><label class="lab" for="meData">Data</label><input type="text" id="meData" maxlength="40"></div>
+            </div>
+          </div>
+          <button class="btn wide" id="actBtn" type="submit" style="margin-top:14px">Componi l'atto</button>
+          <p class="small muted" style="margin-top:8px">I campi lasciati vuoti restano tra parentesi quadre, da completare a mano.</p>
+        </form>
+        <div id="actOut" class="answer" aria-live="polite"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- LIVELLO -->
+  <main class="view" id="v-livello">
+    <div class="head">
+      <h1>Quanto è seria?</h1>
+      <div class="rule"></div>
+      <p>Segna quello che vale per te. Il livello ti dice chi coinvolgere, senza fare di un cambio turno una vertenza.</p>
+    </div>
+    <div class="body" style="margin-top:12px">
+      <div id="lvlAlert"></div>
+      <div class="card raised" id="lvlNow" aria-live="polite"></div>
+      <div class="cat">Che cosa sta succedendo</div>
+      <div class="checks" id="checks"></div>
+      <button class="btn ghost" id="lvlReset" type="button">Azzera le risposte</button>
+      <div class="cat">La scala completa</div>
+      <div class="ladder" id="ladder"></div>
+    </div>
+  </main>
+
+  <!-- A CHI -->
+  <main class="view" id="v-chi">
+    <div class="head">
+      <h1>A chi mi rivolgo?</h1>
+      <div class="rule"></div>
+      <p>Mandare la domanda alla persona giusta è metà del risultato.</p>
+    </div>
+    <div class="body" style="margin-top:12px">
+      <div>
+        <label class="lab" for="chiQ">Cerca per argomento</label>
+        <input type="search" id="chiQ" placeholder="Es. cedolino, turni, infortunio, riscaldamento">
+      </div>
+      <div id="people" class="body" style="padding:0"></div>
+    </div>
+  </main>
+</div>
+
+<div class="tabs"><nav aria-label="Sezioni">
+  <a href="#chiedi" data-v="chiedi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Chiedi</a>
+  <a href="#atti" data-v="atti"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>Atti</a>
+  <a href="#livello" data-v="livello"><svg viewBox="0 0 24 24"><path d="M4 20h4v-5H4zM10 20h4V10h-4zM16 20h4V4h-4z"/></svg>Livello</a>
+  <a href="#chi" data-v="chi"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5.2a3.2 3.2 0 010 5.6M17.5 14.3c2 .8 3.5 2.9 3.5 5.7"/></svg>A chi</a>
+</nav></div>
+
+<dialog id="info" aria-labelledby="infoT">
+  <div class="dlg-h">
+    <img src="data:image/png;base64,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" alt="Nashira Studio">
+    <div><h2 id="infoT" style="font-size:19px">Bussola ATA</h2><div class="small" style="color:#C3CFE0">Ti dice che cosa ti compete, a chi chiederlo e con quali parole.</div></div>
+  </div>
+  <div class="dlg-b">
+    <div><h3>Quello che non fa</h3>
+      <ul>
+        <li>Non è un sindacalista né un avvocato: prepara, riordina, scrive.</li>
+        <li>Non conosce il contratto della tua scuola: turni, criteri e compensi cambiano da istituto a istituto.</li>
+        <li>Non ha le scadenze dei bandi: vale il bando in vigore e il sito dell'Ambito Territoriale.</li>
+        <li>Non tratta i dati degli alunni: nei testi lascia i campi tra parentesi quadre.</li>
+        <li>Può sbagliare: un riferimento che non convince va verificato prima di firmare.</li>
+      </ul>
+    </div>
+    <div><h3>Cinque abitudini che fanno la differenza</h3>
+      <ol>
+        <li>Racconta i fatti con date e orari.</li>
+        <li>Una richiesta per volta.</li>
+        <li>Quando la cosa conta, chiedi un riscontro scritto.</li>
+        <li>Annota subito le risposte ricevute a voce: data, ora, chi c'era.</li>
+        <li>Rileggi prima di firmare. Quello che firmi è tuo.</li>
+      </ol>
+    </div>
+    <div><h3>Riservatezza</h3>
+      <p class="small">Atti, Livello, A chi e la guida per argomento funzionano sul tuo dispositivo, senza inviare nulla. Nome, istituto e luogo, se li scrivi, restano salvati solo qui. Quello che scrivi nel riquadro «Chiedi» raggiunge un'IA solo quando tocchi Chiedi a Bussola, Gemini o Claude; con Gemini e Claude la domanda passa nella loro app, con il tuo account.</p>
+    </div>
+    <div class="quote">Sapere che cosa ti compete non serve a fare di meno. Serve a farlo meglio, e a farlo con la schiena dritta.</div>
+    <p class="small muted">© 2026 Marco Perini · Nashira Studio · edizione ATA-WEB-1.2-MP-2611<br>Segnalazioni e suggerimenti: su Telegram scrivi al bot <a href="https://t.me/StudioNashirabot">@StudioNashirabot</a></p>
+    <button class="btn dark wide" id="infoClose">Chiudi</button>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ---------- dati ---------- */
+const LEVELS = [
+  {n:0, t:"Si risolve parlando", d:"Dubbio organizzativo o richiesta ordinaria: una frase al DSGA, e finisce lì."},
+  {n:1, t:"Richiesta scritta interna", d:"La cosa si ripete o serve una traccia: email al DSGA o al Dirigente, chiedendo riscontro."},
+  {n:2, t:"Istanza protocollata", d:"Nessuna risposta, oppure sono in gioco orario, permessi, compensi, mansioni fuori profilo. Atto protocollato, con copia vistata."},
+  {n:3, t:"RSU d'istituto", d:"Riguarda il contratto integrativo o criteri che valgono per tutti, non solo per te."},
+  {n:4, t:"Sindacato territoriale", d:"Assistenza individuale: mansioni fuori profilo continue, disciplinare, punteggio, spettanze non pagate."},
+  {n:5, t:"Avvocato giuslavorista", d:"Sanzioni di peso, perdita del posto, demansionamento prolungato, condotte vessatorie, danno alla salute."},
+  {n:6, t:"Autorità esterne", d:"Ispettorato del lavoro, INAIL, INPS, Consigliera di parità. Per minacce, aggressioni o fatti contro un minore esistono canali propri."}
+];
+const CHECKS = [
+  {l:1, t:"È già successo altre volte, oppure mi serve una traccia scritta"},
+  {l:2, t:"Ho chiesto a voce o per email e non ho avuto risposta"},
+  {l:2, t:"Sono in gioco orario, permessi, compensi o mansioni fuori dal mio profilo"},
+  {l:3, t:"Riguarda il contratto d'istituto o criteri che valgono per tutti i colleghi"},
+  {l:3, t:"Una decisione organizzativa mi penalizza e mi trovo sola ad affrontarla"},
+  {l:4, t:"Mi impongono con continuità mansioni fuori dal mio profilo"},
+  {l:4, t:"Ho ricevuto una contestazione disciplinare"},
+  {l:4, t:"C'è un problema di punteggio o di posizione in graduatoria"},
+  {l:4, t:"Non mi hanno pagato qualcosa che mi spetta"},
+  {l:4, t:"La mia richiesta scritta è stata respinta"},
+  {l:5, t:"Rischio una sanzione pesante o la perdita del posto"},
+  {l:5, t:"Il contratto è stato risolto, revocato o non rinnovato e lo contesto"},
+  {l:5, t:"Mi hanno tolto le mie mansioni e la situazione dura da tempo"},
+  {l:5, t:"Subisco comportamenti vessatori, discriminatori o ritorsivi, ripetuti"},
+  {l:5, t:"Ho avuto un danno alla salute legato al lavoro, o un infortunio con responsabilità contestata"},
+  {l:5, t:"Ho ricevuto un atto che indica un termine per rispondere o per impugnare", urgent:true},
+  {l:6, t:"C'è un rischio per la sicurezza che la scuola non ha risolto, oppure una questione con INAIL o INPS"},
+  {l:6, t:"Ci sono state minacce, aggressioni o fatti che riguardano un minore"}
+];
+const PEOPLE = [
+  {n:"DSGA", r:"Direttore dei Servizi Generali e Amministrativi", d:"Organizza e dirige il personale ATA. È il primo riferimento per turni, reparti, orario, sostituzioni, materiale di pulizia, ordini di servizio e chiarimenti sulle mansioni di ogni giorno.", k:"turni turno reparto reparti orario sostituzione sostituzioni materiale pulizia detersivo ordine di servizio mansioni mansione cambio permuta straordinario"},
+  {n:"Dirigente Scolastico", r:"Datore di lavoro", d:"Firma i provvedimenti, concede ferie e permessi, adotta il piano delle attività, risponde delle questioni disciplinari e della sicurezza.", k:"ferie permessi permesso disciplinare contestazione sicurezza preside incontro provvedimento piano attività farmaci"},
+  {n:"Segreteria", r:"Ufficio personale", d:"Pratiche amministrative: contratto, ferie e permessi a sistema, certificati, cedolino, ricostruzione di carriera, comunicazioni all'INPS.", k:"contratto certificato certificati servizio cedolino stipendio busta paga carriera ricostruzione malattia assenza pratica"},
+  {n:"RSU d'istituto", r:"Rappresentanza sindacale interna", d:"Si interpella quando la questione riguarda l'applicazione del contratto, i criteri di assegnazione, i compensi accessori, o quando serve qualcuno che parli per tutto il personale.", k:"contratto integrativo istituto criteri assegnazione compensi accessori fondo incarico incarichi collettivo"},
+  {n:"Sindacato territoriale", r:"Assistenza individuale", d:"Carriera, graduatorie, vertenze, ricorsi, pensione. Assiste nei procedimenti disciplinari.", k:"vertenza ricorso graduatoria punteggio pensione disciplinare assistenza reclamo spettanze"},
+  {n:"RLS e RSPP", r:"Sicurezza sul lavoro", d:"Rischi, prodotti di pulizia, dispositivi di protezione, formazione, infortuni, segnalazioni sugli ambienti.", k:"sicurezza rischio rischi prodotti detersivo dpi guanti mascherina formazione infortunio segnalazione guasto scheda emergenza evacuazione carichi"},
+  {n:"Medico competente", r:"Sorveglianza sanitaria", d:"Valuta l'idoneità alla mansione, con visite periodiche o su richiesta del lavoratore.", k:"visita medica idoneità limitazioni salute mani schiena irritazione allergia"},
+  {n:"Ambito Territoriale", r:"Ufficio scolastico provinciale (USP)", d:"Graduatorie provinciali, supplenze, convocazioni, immissioni in ruolo, mobilità.", k:"graduatoria graduatorie 24 mesi supplenza supplenze convocazione ruolo mobilità trasferimento bando"},
+  {n:"Comune o Provincia", r:"Proprietario dell'edificio", d:"Manutenzione, guasti strutturali, riscaldamento, infissi, interventi straordinari. Per le scuole superiori è la Provincia o la Città Metropolitana.", k:"edificio manutenzione guasto riscaldamento caldaia infissi finestra tetto infiltrazione palestra bagno rotto"},
+  {n:"INPS", r:"Previdenza e prestazioni", d:"Malattia, maternità e congedi parentali, permessi L. 104, invalidità, prestazioni.", k:"malattia maternità congedo parentale 104 invalidità pensione prestazioni disoccupazione naspi"},
+  {n:"INAIL", r:"Infortuni e malattie professionali", d:"Infortuni sul lavoro e in itinere, malattie professionali.", k:"infortunio itinere malattia professionale caduta incidente"},
+  {n:"NoiPA", r:"Stipendi", d:"Cedolino, partite stipendiali, detrazioni, Certificazione Unica.", k:"cedolino stipendio detrazioni cu certificazione unica busta paga arretrati"},
+  {n:"Ente locale o cooperativa", r:"Assistenza specialistica agli alunni", d:"Assistenza all'autonomia e alla comunicazione degli alunni con disabilità. È personale diverso dal collaboratore scolastico e va tenuto distinto.", k:"disabilità assistenza autonomia comunicazione educatore oepa alunno assistente"},
+  {n:"Avvocato giuslavorista", r:"Controversie di lavoro", d:"Sanzioni disciplinari di peso, risoluzione del rapporto, demansionamento, condotte vessatorie, danno alla salute.", k:"avvocato legale licenziamento sanzione demansionamento mobbing vessazioni risarcimento impugnare termine"}
+];
+const ACTS = [
+  {c:"Richieste ordinarie", items:[
+    [1,"Chiarimento sulle mansioni assegnate","Al Direttore dei Servizi Generali e Amministrativi"],
+    [2,"Ordine di servizio da formalizzare per iscritto","Al Direttore dei Servizi Generali e Amministrativi"],
+    [3,"Ferie, permessi brevi, L. 104, congedo parentale","Al Dirigente Scolastico"],
+    [4,"Assenza per malattia e invio del certificato","Al Dirigente Scolastico – Ufficio personale"],
+    [5,"Cambio turno o permuta con un collega","Al Direttore dei Servizi Generali e Amministrativi"],
+    [6,"Richieste alla segreteria e chiarimenti sul cedolino","Alla Segreteria – Ufficio personale"]]},
+  {c:"Sicurezza e salute", items:[
+    [7,"Segnalazione di rischio, guasto o carenza di DPI","Al Dirigente Scolastico\np.c. al RSPP e al RLS"],
+    [8,"Richiesta di visita al medico competente","Al Dirigente Scolastico"],
+    [9,"Comunicazione di infortunio in servizio o in itinere","Al Dirigente Scolastico"],
+    [10,"Formazione obbligatoria non ricevuta","Al Dirigente Scolastico"]]},
+  {c:"Organizzazione e contratto", items:[
+    [11,"Osservazioni sui criteri di reparti e turni","Alla RSU d'istituto"],
+    [12,"Riconoscimento di un incarico specifico","Al Dirigente Scolastico\np.c. al DSGA"],
+    [13,"Sollecito dopo una richiesta rimasta senza risposta","[stesso destinatario della prima richiesta]"],
+    [14,"Accesso agli atti e copia dei documenti","Al Dirigente Scolastico"]]},
+  {c:"Carriera e graduatorie", items:[
+    [15,"Reclamo su punteggio o posizione in graduatoria","[ufficio indicato dal bando in vigore]"],
+    [16,"Accettazione o rinuncia a una supplenza","[scuola o ufficio che ha fatto la proposta]"]]},
+  {c:"Situazioni delicate", items:[
+    [17,"Controdeduzioni a una contestazione di addebito","Al Dirigente Scolastico"],
+    [18,"Relazione dei fatti per il sindacato o l'avvocato","Relazione riservata per [sindacato / avvocato]"],
+    [19,"Richiesta di incontro al Dirigente Scolastico","Al Dirigente Scolastico"]]}
+];
+const QUESTIONS = [
+  "Una maestra mi ha detto di dare le gocce a un bambino a metà mattina. Devo farlo? Io non me la sento.",
+  "Devo pulire anche la palestra usata dalla società sportiva la sera?",
+  "Mi hanno spostata di plesso da un giorno all'altro: possono farlo?",
+  "Chi deve accompagnare il bambino in bagno durante la mensa?",
+  "Ho fatto mezz'ora in più: la recupero o me la pagano?",
+  "Il detersivo mi irrita le mani: a chi lo dico e come?",
+  "Mi hanno chiesto di firmare un ordine di servizio che non ho capito."
+];
+const EXAMPLE = {
+  in_due_righe:"No, non sei obbligata. Dare un farmaco a scuola non rientra tra le mansioni del profilo e non può essere disposto con un ordine verbale di un'insegnante.",
+  semaforo:{
+    non_compete:["Somministrare un farmaco su richiesta verbale di un collega."],
+    zona_grigia:["La disponibilità volontaria, quando esistono la richiesta della famiglia, la certificazione del medico e l'autorizzazione scritta del Dirigente."],
+    compete:["Avvisare subito chi di dovere e vigilare sul bambino, come sempre."]},
+  a_chi:{figura:"DSGA", perche:"È chi organizza il tuo lavoro. Se la famiglia ha già consegnato dei documenti, la questione passa al Dirigente Scolastico, l'unico che può autorizzare la procedura."},
+  come:"Per iscritto, con una mail breve: serve a te per non restare sola davanti a una responsabilità che non è tua, e serve alla scuola per attivare la strada corretta.",
+  testo_pronto:{tipo:"atto", titolo:"Il testo pronto", testo:"Al Direttore dei Servizi Generali e Amministrativi\np.c. al Dirigente Scolastico dell'Istituto [nome Istituto]\n\nOggetto: richiesta di indicazioni sulla somministrazione di farmaci in orario scolastico.\n\nIn data [data], intorno alle ore [orario], mi è stato chiesto verbalmente di somministrare un farmaco a un alunno della classe [classe]. Non risultandomi che la richiesta rientri tra i compiti del mio profilo, e non essendo a conoscenza di un'autorizzazione formale, chiedo cortesemente indicazioni scritte su come devo comportarmi in casi analoghi. Resto a disposizione per ogni chiarimento.\n\n[luogo], [data]\n[nome e cognome] — collaboratore scolastico"},
+  livello:{n:1, motivo:"Serve una traccia scritta, niente di più."},
+  se_no:"Se non rispondono: istanza protocollata e, se la cosa si ripete, un passaggio dalla RSU.",
+  da_verificare:["Se esiste già un protocollo interno per la somministrazione dei farmaci e chi ha dato la disponibilità."]
+};
+
+/* ---------- istruzioni per l'assistente ---------- */
+const KNOW = `Sei Bussola ATA, assistente per i collaboratori scolastici della scuola statale italiana. Chi scrive non è un giurista: vuole capire in fretta che cosa le compete, a chi rivolgersi e che cosa scrivere o dire, senza creare tensioni inutili. Usa un italiano semplice, concreto e rispettoso. Quando citi una norma, traducila subito in parole comuni.
+
+FONTI, in quest'ordine: 1) legge (Testo Unico della scuola D.Lgs. 297/1994, D.Lgs. 165/2001, L. 104/1992, D.Lgs. 151/2001 su maternità e congedi, D.Lgs. 81/2008 sulla sicurezza, L. 241/1990 sull'accesso agli atti); 2) contratto nazionale del comparto Istruzione e Ricerca con la tabella dei profili, dove sono scritte le mansioni; 3) contratto integrativo d'istituto (turni, criteri, incarichi, compensi: cambia da scuola a scuola e ogni anno); 4) organizzazione interna (piano delle attività, ordini di servizio, circolari). I livelli 3 e 4 decidono quando e dove si lavora, non possono assegnare mansioni fuori dal profilo nazionale.
+
+PROFILO del collaboratore scolastico: pulizia di locali, spazi e arredi; sorveglianza degli alunni in aule, laboratori e spazi comuni quando il docente è momentaneamente assente; accoglienza e sorveglianza del pubblico; custodia e vigilanza dei locali; supporto all'attività amministrativa e didattica; ausilio materiale agli alunni con disabilità nell'accesso, nell'uscita e nell'uso dei servizi igienici; assistenza agli alunni di infanzia e primaria nell'uso dei servizi igienici e nella cura dell'igiene personale. Distingui tutto questo dagli incarichi aggiuntivi retribuiti e dalle mansioni di altri profili o altri enti.
+
+A CHI RIVOLGERSI: DSGA (organizza il personale ATA: turni, reparti, orario, sostituzioni, materiale, ordini di servizio); Dirigente Scolastico (datore di lavoro: ferie, permessi, disciplinare, sicurezza); Segreteria-ufficio personale (contratto, certificati, cedolino, carriera); RSU d'istituto (applicazione del contratto, criteri, compensi accessori); sindacato territoriale (assistenza individuale, graduatorie, vertenze, disciplinare); RLS e RSPP (sicurezza, DPI, prodotti, formazione); medico competente (idoneità alla mansione); Ambito Territoriale (graduatorie, supplenze, ruolo, mobilità); Comune o Provincia (edificio, manutenzione, riscaldamento); INPS; INAIL; NoiPA (cedolino); ente locale o cooperativa (assistenza specialistica agli alunni con disabilità, personale distinto); avvocato giuslavorista.
+
+SCALA DI INTERVENTO: 0 si risolve parlando; 1 richiesta scritta interna con riscontro; 2 istanza protocollata con copia vistata; 3 RSU d'istituto; 4 sindacato territoriale; 5 avvocato giuslavorista (sanzione più che simbolica o perdita del posto, risoluzione o mancato rinnovo contestati, demansionamento che dura, condotte vessatorie ripetute, danno alla salute, richieste di risarcimento, qualsiasi atto ricevuto con un termine per rispondere o impugnare); 6 autorità esterne (Ispettorato del lavoro, INAIL, INPS, Consigliera di parità; per fatti di rilievo penale indica con misura che esistono canali propri, senza qualificare il reato).
+
+REGOLE:
+- Se è stato ricevuto un atto con un termine per rispondere o impugnare, segnalalo per primo e di' di contattare subito sindacato o legale. Non calcolare scadenze e non dire quanti giorni ci sono: rimanda al termine scritto sull'atto. Mai suggerire di aspettare.
+- Non inventare numeri di articolo, importi, date o scadenze. Meglio nessuna citazione che una citazione incerta: se non sei sicuro, dillo e indica dove verificare.
+- Distingui ciò che vale ovunque (legge, contratto nazionale), ciò che dipende dal contratto d'istituto e ciò che è solo prassi.
+- Graduatorie, domande e scadenze cambiano ogni anno: rimanda al bando in vigore e al sito dell'Ambito Territoriale.
+- Negli atti usa solo i fatti raccontati. Non aggiungere circostanze, non arrotondare orari. Dove manca un dato lascia un campo tra parentesi quadre, per esempio [data], [orario], [nome Istituto].
+- Non scrivere nomi di alunni, colleghi o famiglie: usa "un alunno", "una collega" o [Omissis]. Non commentare dati sulla salute degli alunni.
+- Non spingere al conflitto: prima il chiarimento diretto, poi la richiesta scritta, poi RSU o sindacato. Tono collaborativo; il tono fermo solo dopo una richiesta rimasta senza risposta.
+- Non valutare lo stato psicologico di chi scrive. Se emergono tensione prolungata o isolamento, suggerisci con misura di non affrontarla da sola.
+- Oltre il livello 3 dichiara che il tuo testo serve a presentarsi preparati, non a sostituire chi ha titolo per assistere.
+- Forma degli atti: destinatario corretto (per conoscenza solo chi serve), oggetto sintetico, il fatto con date e circostanze, la richiesta in una frase, l'eventuale riferimento solo se certo, richiesta di riscontro scritto, chiusura con [luogo], [data], [nome e cognome] — collaboratore scolastico. Frasi corte, niente formule inutili.`;
+
+const FMT_ASK = `Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo e senza markdown. Campi (usa null o [] quando non servono):
+{"urgente": null oppure una frase d'avviso se c'è un termine da rispettare,
+ "domanda": null oppure UNA sola domanda di chiarimento se senza quel dato non puoi rispondere in modo utile,
+ "in_due_righe": "la risposta secca",
+ "norma": "che cosa dice la regola, in parole comuni",
+ "semaforo": {"compete": ["..."], "non_compete": ["... e di chi è la competenza"], "zona_grigia": ["..."]},
+ "a_chi": {"figura": "una sola figura", "perche": "il motivo", "riserva": "a chi passare se non risponde, oppure null"},
+ "come": "canale, forma, tempi, se conviene lasciare traccia scritta",
+ "testo_pronto": null oppure {"tipo": "atto" o "frase", "titolo": "titolo breve", "testo": "l'atto completo, con a capo veri, oppure la frase esatta da dire a voce"},
+ "livello": null oppure {"n": numero da 0 a 6, "motivo": "perché"},
+ "se_no": "il passo successivo se dicono di no o non rispondono",
+ "da_verificare": ["che cosa dipende dal contratto d'istituto o dalla prassi locale"]}`;
+
+const FMT_ACT = `Scrivi l'atto richiesto, completo dalla prima all'ultima riga. Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo e senza markdown:
+{"urgente": null oppure una frase d'avviso se c'è un termine da rispettare,
+ "testo": "l'atto completo, con a capo veri",
+ "come_inviarlo": "consegna a mano con protocollo e copia vistata, oppure casella istituzionale della scuola: scegli e spiega in una riga",
+ "mancano": ["i dati che chi firma deve completare a mano"],
+ "nota": null oppure un'avvertenza breve (per esempio: fatti assistere dal sindacato)}`;
+
+/* ---------- utilità ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const arr = v => Array.isArray(v) ? v.filter(x => x != null && String(x).trim() !== "").map(String) : (v ? [String(v)] : []);
+const store = {
+  get(k){ try{ return localStorage.getItem("bussola." + k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem("bussola." + k, v); }catch(e){} }
+};
+let toastT;
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2200); }
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); toast("Copiato"); return; }catch(e){}
+  try{
+    const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly",""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove();
+    toast(ok ? "Copiato" : "Tieni premuto sul testo per copiarlo");
+  }catch(e){ toast("Tieni premuto sul testo per copiarlo"); }
+}
+function parseJSON(text){
+  let t = String(text || "").trim().replace(/^```(?:json)?/i, "").replace(/```$/,"").trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if(a === -1 || b <= a) return null;
+  try{ const o = JSON.parse(t.slice(a, b + 1)); return (o && typeof o === "object" && !Array.isArray(o)) ? o : null; }catch(e){ return null; }
+}
+
+/* ---------- assistente ---------- */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const aiReady = (async () => {
+  try{
+    for(let i = 0; i < 12 && !(window.claude && typeof window.claude.use === "function"); i++) await sleep(250);
+    if(!(window.claude && typeof window.claude.use === "function")) return null;
+    const s = await window.claude.use("sample");
+    return typeof s === "function" ? s : null;
+  }catch(e){ return null; }
+})();
+let aiOn = false;
+aiReady.then(s => {
+  if(!s) return;
+  aiOn = true;
+  $("askBtn").hidden = false; $("aiRow").hidden = false;
+  $("handLab").textContent = "Oppure chiedi con";
+  if(!convo.length && !asking) renderAnswer(EXAMPLE, {example:true});
+});
+let ctrl = null;
+async function callAI(messages){
+  const sample = await aiReady;
+  if(!sample){ const e = new Error("unavailable"); e.code = "unavailable"; throw e; }
+  if(ctrl) ctrl.abort();
+  ctrl = new AbortController();
+  const res = await sample(messages, {signal: ctrl.signal, cache: false});
+  return res && typeof res.text === "string" ? res.text : "";
+}
+function errorText(e){
+  const c = e && e.code;
+  if(c === "unavailable") return "In questa pagina l'assistente non è disponibile. Usa la guida per argomento qui sotto e la sezione Atti.";
+  if(c === "not_granted") return "Per rispondere, l'assistente ha bisogno del tuo consenso. Riprova e accetta la richiesta che compare.";
+  if(c === "rate_limited") return "Troppe richieste in poco tempo. Aspetta un minuto e riprova.";
+  return "Non sono riuscita a ottenere la risposta. Controlla la connessione e riprova.";
+}
+const loaderHTML = msg => `<div class="card loader"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#DAE0EA" stroke-width="6"/><g class="needle"><path d="M50 14 L59 50 L50 58 L41 50 Z" fill="#E87722"/><path d="M50 86 L59 50 L50 42 L41 50 Z" fill="#0A1D3B"/></g></svg><div><b>${esc(msg)}</b><div class="small muted">Di solito bastano pochi secondi.</div></div></div>`;
+
+/* ---------- CHIEDI ---------- */
+const ctx = { ordine: store.get("ordine") || "", contr: store.get("contr") || "" };
+function seg(id, key, opts){
+  const box = $(id);
+  box.innerHTML = opts.map(o => `<button type="button" data-v="${esc(o)}" aria-pressed="${ctx[key] === o}">${esc(o)}</button>`).join("");
+  box.addEventListener("click", ev => {
+    const b = ev.target.closest("button"); if(!b) return;
+    ctx[key] = ctx[key] === b.dataset.v ? "" : b.dataset.v; store.set(key, ctx[key]);
+    box.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === ctx[key])));
+  });
+}
+seg("seg-ordine", "ordine", ["Infanzia", "Primaria", "Secondaria di primo grado"]);
+seg("seg-contr", "contr", ["Tempo determinato", "Tempo indeterminato"]);
+
+let convo = [];
+function renderAnswer(o, opts){
+  opts = opts || {};
+  const h = [];
+  if(opts.example) h.push(`<div class="cat">Esempio di risposta · «Devo dare le gocce a un bambino?»</div>`);
+  if(o.urgente) h.push(`<div class="alert"><b>Attenzione: c'è un termine da rispettare</b>${esc(o.urgente)}</div>`);
+  if(o.domanda) h.push(`<div class="note"><b>Mi serve un dato in più</b><br>${esc(o.domanda)}</div>`);
+  const parts = [];
+  if(o.in_due_righe) parts.push(`<div class="sec"><div class="eyebrow">In due righe</div><p class="lead">${esc(o.in_due_righe)}</p></div>`);
+  const s = o.semaforo || {}, g = arr(s.compete), r = arr(s.non_compete), y = arr(s.zona_grigia);
+  const li = a => "<ul>" + a.map(x => `<li>${esc(x)}</li>`).join("") + "</ul>";
+  if(g.length || r.length || y.length){
+    parts.push(`<div class="lights">` +
+      (r.length ? `<div class="light r"><span class="dot"></span><div><div class="t">NON TI COMPETE</div>${li(r)}</div></div>` : "") +
+      (y.length ? `<div class="light y"><span class="dot"></span><div><div class="t">ZONA GRIGIA</div>${li(y)}</div></div>` : "") +
+      (g.length ? `<div class="light g"><span class="dot"></span><div><div class="t">TI COMPETE</div>${li(g)}</div></div>` : "") + `</div>`);
+  }
+  if(o.norma) parts.push(`<div class="sec"><h3>Che cosa dice la regola</h3><p>${esc(o.norma)}</p></div>`);
+  const w = o.a_chi;
+  if(w && (w.figura || w.perche)) parts.push(`<div class="sec"><h3>A chi rivolgerti</h3>${w.figura ? `<span class="who">${esc(w.figura)}</span>` : ""}<p>${esc(w.perche)}</p>${w.riserva ? `<p class="small muted" style="margin-top:4px">Se non risponde: ${esc(w.riserva)}</p>` : ""}</div>`);
+  if(o.come) parts.push(`<div class="sec"><h3>Come chiederlo</h3><p>${esc(o.come)}</p></div>`);
+  if(parts.length) h.push(`<div class="card answer">${parts.join("")}</div>`);
+  const tp = o.testo_pronto;
+  if(tp && tp.testo){
+    h.push(`<div class="card answer"><div class="row" style="justify-content:space-between"><div class="eyebrow">${esc(tp.titolo || (tp.tipo === "frase" ? "La frase da dire" : "Il testo pronto"))}</div><button type="button" class="btn ghost" data-copy="1">Copia</button></div><div class="letter">${esc(tp.testo)}</div>${tp.tipo === "frase" ? `<p class="small muted">Subito dopo annota data, ora, chi c'era e che cosa ti è stato risposto.</p>` : `<p class="small muted">Completa i campi tra parentesi quadre e rileggi prima di firmare.</p>`}</div>`);
+  }
+  const tail = [];
+  const lv = o.livello;
+  if(lv && Number.isInteger(Number(lv.n)) && LEVELS[Number(lv.n)]){
+    const L = LEVELS[Number(lv.n)];
+    tail.push(`<div class="lvl"><div class="n l${L.n}">${L.n}</div><div><b>Livello ${L.n} · ${esc(L.t)}</b><div class="small muted">${esc(lv.motivo || L.d)}</div></div></div>`);
+  }
+  if(o.se_no) tail.push(`<div class="sec"><h3>Se ti dicono di no</h3><p>${esc(o.se_no)}</p></div>`);
+  const dv = arr(o.da_verificare);
+  if(dv.length) tail.push(`<div class="sec"><h3>Da verificare nella tua scuola</h3><ul class="plain">${dv.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`);
+  if(tail.length) h.push(`<div class="card answer">${tail.join("")}</div>`);
+  if(o._raw) h.push(`<div class="card"><div class="letter">${esc(o._raw)}</div></div>`);
+  if(!opts.example){
+    h.push(`<form class="card" id="moreForm"><label class="lab" for="more">${o.domanda ? "La tua risposta" : "Aggiungi un dettaglio o chiedi ancora"}</label><textarea id="more" style="min-height:70px" maxlength="3000"></textarea><div class="row" style="margin-top:10px"><button class="btn" type="submit">Invia</button><button class="btn ghost" type="button" id="newQ">Nuova domanda</button></div></form>`);
+    h.push(`<p class="small muted">Bussola prepara, non sostituisce sindacato o avvocato. Un riferimento che non ti convince va verificato prima di firmare.</p>`);
+  }
+  const box = $("answerBox");
+  box.innerHTML = h.join("");
+  const cp = box.querySelector("[data-copy]");
+  if(cp) cp.addEventListener("click", () => copyText(tp.testo));
+  const mf = $("moreForm");
+  if(mf) mf.addEventListener("submit", ev => { ev.preventDefault(); const v = $("more").value.trim(); if(!v){ $("more").focus(); return; } ask(v, true); });
+  const nq = $("newQ");
+  if(nq) nq.addEventListener("click", () => { convo = []; $("q").value = ""; renderAnswer(EXAMPLE, {example:true}); $("examples").hidden = false; $("q").focus(); window.scrollTo(0, 0); });
+}
+let asking = false;
+async function ask(text, follow){
+  if(asking) return;
+  asking = true;
+  const box = $("answerBox"), btn = $("askBtn");
+  btn.disabled = true; $("shell").classList.add("busy");
+  let content;
+  if(!follow){
+    convo = [];
+    const c = [ctx.ordine && "Ordine di scuola: " + ctx.ordine, ctx.contr && "Contratto: " + ctx.contr].filter(Boolean).join(" · ") || "Ordine di scuola e contratto non indicati";
+    content = KNOW + "\n\n" + FMT_ASK + "\n\nCONTESTO: " + c + "\n\nDOMANDA:\n" + text;
+  }else{
+    content = "SEGUITO:\n" + text + "\n\nAggiorna la risposta completa. " + FMT_ASK;
+  }
+  const messages = convo.concat([{role:"user", content}]);
+  box.innerHTML = loaderHTML("Sto orientando la bussola…");
+  $("examples").hidden = true;
+  box.scrollIntoView({behavior:"smooth", block:"start"});
+  try{
+    const raw = await callAI(messages);
+    const o = parseJSON(raw) || {_raw: raw || "Risposta vuota. Riprova."};
+    convo = messages.concat([{role:"assistant", content: raw}]);
+    renderAnswer(o);
+  }catch(e){
+    if(e && e.name === "AbortError"){ asking = false; btn.disabled = false; $("shell").classList.remove("busy"); return; }
+    box.innerHTML = `<div class="alert"><b>Risposta non arrivata</b>${esc(errorText(e))}</div>`;
+    $("examples").hidden = false;
+  }
+  asking = false; btn.disabled = false; $("shell").classList.remove("busy");
+}
+$("askForm").addEventListener("submit", ev => {
+  ev.preventDefault();
+  const v = $("q").value.trim();
+  if(!v){ $("q").focus(); toast("Scrivi prima che cosa è successo"); return; }
+  if(!aiOn){ toast("Scegli Gemini o Claude qui sotto"); return; }
+  ask(v, false);
+});
+const FMT_TXT = `Rispondi in italiano, con testo semplice e queste sezioni, saltando quelle che non servono:
+IN DUE RIGHE · LA REGOLA, IN PAROLE COMUNI · SEMAFORO (🟢 ti compete, 🔴 non ti compete e di chi è la competenza, 🟡 zona grigia) · A CHI RIVOLGERTI (una sola figura, con il motivo) · COME CHIEDERLO · TESTO PRONTO (l'atto completo oppure la frase esatta da dire) · LIVELLO DI INTERVENTO · SE TI DICONO DI NO · DA VERIFICARE NELLA TUA SCUOLA.
+Se ti manca un dato indispensabile, fai una sola domanda e poi rispondi.`;
+function handoffText(){
+  const c = [ctx.ordine && "Ordine di scuola: " + ctx.ordine, ctx.contr && "Contratto: " + ctx.contr].filter(Boolean).join(" · ") || "Ordine di scuola e contratto non indicati";
+  return KNOW + "\n\n" + FMT_TXT + "\n\nCONTESTO: " + c + "\n\nDOMANDA:\n" + $("q").value.trim();
+}
+function copyNow(text){
+  let ok = false;
+  try{
+    const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length); ok = document.execCommand("copy"); ta.remove();
+  }catch(e){}
+  try{ navigator.clipboard.writeText(text).catch(() => {}); ok = true; }catch(e){}
+  return ok;
+}
+function handoff(ev, which){
+  const a = ev.currentTarget;
+  if(!$("q").value.trim()){ ev.preventDefault(); $("q").focus(); toast("Scrivi prima che cosa è successo"); return; }
+  const text = handoffText();
+  const ok = copyNow(text);
+  a.href = which === "claude" ? "https://claude.ai/new?q=" + encodeURIComponent(text) : "https://gemini.google.com/app";
+  toast(ok ? "Domanda copiata: incollala e invia" : "Copia non riuscita: riprova");
+}
+$("goGemini").addEventListener("click", ev => handoff(ev, "gemini"));
+$("goClaude").addEventListener("click", ev => handoff(ev, "claude"));
+$("chips").innerHTML = QUESTIONS.map((q, i) => `<button type="button" class="chip" data-i="${i}">${esc(q)}</button>`).join("");
+$("chips").addEventListener("click", ev => {
+  const b = ev.target.closest(".chip"); if(!b) return;
+  $("q").value = QUESTIONS[Number(b.dataset.i)]; $("q").focus(); window.scrollTo({top:0, behavior:"smooth"});
+});
+
+/* ---------- ATTI (composti sul dispositivo) ---------- */
+const F = (id, l, ph, type, opts) => ({id, l, ph: ph || "", type: type || "text", opts});
+const has = x => !!(x && String(x).trim());
+const bb = (x, label) => has(x) ? String(x).trim() : "[" + label + "]";
+const dot = s => { s = String(s).trim(); return /[.!?…:;]$/.test(s) ? s : s + "."; };
+const bd = (x, label) => has(x) ? dot(x) : "[" + label + "].";
+const RISC = "Chiedo cortesemente un riscontro scritto.";
+const DS = "Al Dirigente Scolastico", DSGA = "Al Direttore dei Servizi Generali e Amministrativi";
+const DEF = {
+  1:{dest:DSGA, inst:true, og:"richiesta di chiarimento sulle mansioni assegnate",
+    fields:[F("quando","Quando è successo","es. 12 novembre 2026, verso le 10"),F("chi","Chi te l'ha chiesto (il ruolo, senza nome)","es. una docente"),F("cosa","Che cosa ti è stato chiesto di fare","es. pulire la palestra dopo l'uso serale","area")],
+    body:v=>`In data ${bb(v.quando,"data e orario")}${has(v.chi)?", da parte di "+v.chi.trim()+",":""} mi è stata chiesta la seguente attività: ${bd(v.cosa,"attività richiesta")}\n\nNon mi è chiaro se rientri tra le mansioni del mio profilo o tra quelle che mi sono state assegnate. Chiedo cortesemente un chiarimento scritto su come devo comportarmi in questo caso e nei casi analoghi.\n\nResto a disposizione per ogni chiarimento.`},
+  2:{dest:DSGA, inst:true, og:"richiesta di conferma scritta di una disposizione di servizio",
+    fields:[F("quando","Quando l'hai ricevuta","es. 12 novembre 2026, alle 8.30"),F("chi","Chi te l'ha data (il ruolo)","es. il DSGA, una docente"),F("cosa","Che cosa ti è stato detto di fare","","area")],
+    body:v=>`In data ${bb(v.quando,"data e orario")} ho ricevuto a voce, da parte di ${bb(v.chi,"chi ha dato la disposizione")}, la seguente disposizione: ${bd(v.cosa,"contenuto della disposizione")}\n\nPer svolgere correttamente quanto richiesto, chiedo che la disposizione mi sia confermata per iscritto, con l'indicazione di tempi e modalità.`},
+  3:{dest:DS, inst:true, og:v=>"richiesta di "+v.tipo.replace(/^un /,""),
+    fields:[F("tipo","Che cosa chiedi","","select",["ferie","festività soppresse","un permesso breve","un permesso retribuito per motivi personali o familiari","un permesso ai sensi della L. 104/1992","un periodo di congedo parentale"]),F("periodo","Per quando","es. dal 2 al 5 dicembre 2026, oppure il 3 dicembre dalle 10 alle 12"),F("motivo","Motivo, solo se serve","")],
+    body:v=>`Chiedo di poter fruire di ${v.tipo} nel seguente periodo: ${bd(v.periodo,"giorni e orari")}${has(v.motivo)?"\n\nMotivo: "+dot(v.motivo):""}\n\nAllego la documentazione prevista, se richiesta. ${RISC}`},
+  4:{dest:DS+"\nUfficio personale", inst:true, og:"comunicazione di assenza per malattia",
+    fields:[F("dal","Assente dal","es. 12 novembre 2026"),F("al","Prognosi fino al, se la conosci",""),F("prot","Numero di protocollo del certificato, se lo hai",""),F("rep","Indirizzo di reperibilità, solo se diverso dal solito","")],
+    body:v=>`Comunico che dal ${bb(v.dal,"data")} sono assente dal servizio per malattia${has(v.al)?", con prognosi fino al "+v.al.trim():""}.\n\nIl certificato medico è stato trasmesso dal medico per via telematica${has(v.prot)?" (numero di protocollo: "+v.prot.trim()+")":""}.${has(v.rep)?"\n\nDurante l'assenza sono reperibile al seguente indirizzo: "+dot(v.rep):""}`,
+    nota:"Controlla con il medico che il certificato sia stato inviato. Non scrivere la diagnosi."},
+  5:{dest:DSGA, inst:true, og:"richiesta di cambio turno",
+    fields:[F("giorno","Giorno","es. giovedì 19 novembre 2026"),F("att","Turno attuale","es. 7.30–14.42"),F("rich","Turno richiesto","es. 11.00–18.12"),F("collega","Collega con cui fai il cambio, se è una permuta",""),F("motivo","Motivo, se documentato","")],
+    body:v=>`Chiedo di poter modificare il mio turno del giorno ${bb(v.giorno,"giorno")}: da ${bb(v.att,"turno attuale")} a ${bb(v.rich,"turno richiesto")}.${has(v.collega)?"\n\nIl cambio avviene in permuta con "+v.collega.trim()+", che ha dato la propria disponibilità. Il servizio resta coperto.":""}${has(v.motivo)?"\n\nMotivo: "+dot(v.motivo):""}\n\n${RISC}`},
+  6:{dest:"Alla Segreteria – Ufficio personale", inst:true, og:"richiesta all'ufficio personale",
+    fields:[F("tipo","Che cosa chiedi","","select",["copia del mio contratto di lavoro","un certificato di servizio","un chiarimento sul mio cedolino","la verifica e la correzione di una voce del mio stipendio"]),F("det","Dettagli utili","es. cedolino di ottobre 2026, voce che non torna","area")],
+    body:v=>`Chiedo cortesemente ${v.tipo}.${has(v.det)?"\n\nNel dettaglio: "+dot(v.det):""}\n\nRingrazio per la collaborazione.`},
+  7:{dest:DS+"\np.c. al RSPP e al RLS", inst:true, og:"segnalazione di una situazione di rischio",
+    fields:[F("quando","Quando l'hai notato",""),F("dove","Dove","es. bagni del primo piano"),F("cosa","Che cosa hai riscontrato","es. pavimento sconnesso, guanti finiti, presa scoperta","area"),F("edif","Riguarda l'edificio (muri, impianti, infissi)?","","select",["No","Sì"])],
+    body:v=>`Segnalo che in data ${bb(v.quando,"data")}, nel seguente luogo: ${bb(v.dove,"luogo")}, ho riscontrato quanto segue: ${bd(v.cosa,"descrizione")}\n\nLa situazione può costituire un rischio per chi lavora e per chi frequenta la scuola. Chiedo che sia verificata e che siano adottate le misure necessarie.${v.edif==="Sì"?" Poiché riguarda l'edificio, chiedo che la segnalazione sia inoltrata all'ente proprietario.":""}\n\nNel frattempo chiedo indicazioni su come comportarmi.`},
+  8:{dest:DS, inst:true, og:"richiesta di visita al medico competente",
+    fields:[F("att","Attività del lavoro a cui si collega, se vuoi indicarla","es. movimentazione dei carichi, uso dei detergenti")],
+    body:v=>`Chiedo di essere sottoposto/a a visita dal medico competente, per la valutazione della mia idoneità alla mansione${has(v.att)?", con riferimento a: "+v.att.trim():""}.\n\nChiedo di conoscere data e modalità della visita.`,
+    nota:"Non descrivere qui la tua condizione di salute: ne parlerai direttamente con il medico."},
+  9:{dest:DS, inst:true, og:"comunicazione di infortunio",
+    fields:[F("tipo","Dove è avvenuto","","select",["in servizio","in itinere, nel tragitto tra casa e lavoro"]),F("quando","Data e ora",""),F("dove","Luogo",""),F("come","Che cosa è successo","Solo i fatti, in ordine","area"),F("pres","Chi era presente (ruoli)",""),F("cure","Dove ti sei fatta curare, se è successo","es. pronto soccorso di …")],
+    body:v=>`Comunico che in data ${bb(v.quando,"data e ora")}, ${v.tipo}, nel seguente luogo: ${bb(v.dove,"luogo")}, ho subito un infortunio.\n\nDescrizione dei fatti: ${bd(v.come,"che cosa è successo")}${has(v.pres)?"\n\nErano presenti: "+dot(v.pres):""}${has(v.cure)?"\n\nPer le cure mi sono rivolto/a a: "+dot(v.cure):""}\n\nTrasmetto la certificazione medica appena disponibile. Chiedo che siano avviati gli adempimenti di competenza.`,
+    nota:"Un infortunio va comunicato subito: non aspettare."},
+  10:{dest:DS, inst:true, og:"richiesta di formazione obbligatoria",
+    fields:[F("quale","Quale formazione ti manca","es. sicurezza sul lavoro, uso dei prodotti di pulizia"),F("dal","In servizio in questa scuola dal","")],
+    body:v=>`Ad oggi non ho ricevuto la formazione obbligatoria su: ${bd(v.quale,"argomento della formazione")}${has(v.dal)?" Sono in servizio presso questo Istituto dal "+dot(v.dal):""}\n\nChiedo di essere inserito/a nel primo corso utile e di ricevere, nel frattempo, le indicazioni necessarie per lavorare in sicurezza.`},
+  11:{dest:"Alla RSU d'istituto", og:"osservazioni sui criteri di assegnazione di reparti e turni",
+    fields:[F("cosa","Quale criterio o assegnazione","es. assegnazione dei reparti per l'anno in corso","area"),F("eff","Che cosa comporta, in concreto","","area"),F("prop","La tua proposta, se ne hai una","")],
+    body:v=>`Vi sottopongo alcune osservazioni su: ${bd(v.cosa,"criterio o assegnazione")}\n\n${bd(v.eff,"che cosa comporta in concreto")}${has(v.prop)?"\n\nPropongo: "+dot(v.prop):""}\n\nVi chiedo di valutare la questione e di portarla al confronto con la dirigenza, nell'interesse di tutto il personale interessato.`},
+  12:{dest:DS+"\np.c. al DSGA", inst:true, og:"richiesta di riconoscimento di un incarico specifico",
+    fields:[F("att","Attività che svolgi","","area"),F("dal","Da quando","")],
+    body:v=>`Dal ${bb(v.dal,"data di inizio")} svolgo con continuità la seguente attività: ${bd(v.att,"attività svolta")}\n\nChiedo che sia valutato il riconoscimento di un incarico specifico e del relativo compenso, secondo quanto previsto dal contratto integrativo d'istituto.\n\n${RISC}`},
+  13:{destField:"Stesso destinatario della prima richiesta", og:"sollecito di riscontro",
+    fields:[F("data","Data della prima richiesta",""),F("ogg","Oggetto della prima richiesta",""),F("prot","Numero di protocollo, se lo hai","")],
+    body:v=>`In data ${bb(v.data,"data della prima richiesta")} ho presentato una richiesta avente ad oggetto: ${bb(v.ogg,"oggetto")}${has(v.prot)?" (protocollo n. "+v.prot.trim()+")":""}.\n\nAd oggi non ho ricevuto risposta. Rinnovo la richiesta e chiedo un riscontro scritto.`},
+  14:{dest:DS, inst:true, og:"richiesta di accesso agli atti (L. 241/1990)",
+    fields:[F("doc","Quali documenti","es. il mio fascicolo personale, l'ordine di servizio del …","area"),F("mot","Perché ti servono","es. verificare la mia posizione")],
+    body:v=>`Ai sensi della L. 241/1990 chiedo di prendere visione e di avere copia dei seguenti documenti, che riguardano la mia posizione: ${bd(v.doc,"documenti richiesti")}\n\nLa richiesta è motivata da: ${bd(v.mot,"motivo")}`},
+  15:{destField:"Ufficio indicato dal bando in vigore", og:"reclamo avverso la graduatoria",
+    fields:[F("grad","Quale graduatoria","es. graduatoria provinciale ATA 24 mesi, profilo collaboratore scolastico"),F("err","Che cosa non torna","es. punteggio attribuito e punteggio che ritieni corretto, servizio non valutato","area"),F("all","Documenti che alleghi","")],
+    body:v=>`Presento reclamo avverso la seguente graduatoria: ${bd(v.grad,"graduatoria")}\n\n${bd(v.err,"errore riscontrato")}\n\nChiedo la verifica e la rettifica della mia posizione.${has(v.all)?"\n\nAllego: "+dot(v.all):""}`,
+    alert:"Il reclamo si presenta entro il termine e con le modalità scritte nel bando in vigore. Controllali subito, anche sul sito dell'Ambito Territoriale."},
+  16:{destField:"Scuola o ufficio che ha fatto la proposta", og:v=>(v.scelta==="accetto"?"accettazione":"rinuncia")+" di una proposta di supplenza",
+    fields:[F("scelta","La tua decisione","","select",["accetto","rinuncio"]),F("sede","Sede della supplenza",""),F("per","Periodo",""),F("ric","Proposta ricevuta il","")],
+    body:v=>`Comunico di ${v.scelta==="accetto"?"accettare la":"rinunciare alla"} proposta di supplenza presso ${bb(v.sede,"sede")}, per il periodo ${bb(v.per,"periodo")}, ricevuta in data ${bb(v.ric,"data")}.`,
+    nota:"La rinuncia può avere conseguenze sulla graduatoria: prima di inviarla verifica il bando in vigore o chiedi al sindacato."},
+  17:{dest:DS, inst:true, og:"controdeduzioni alla contestazione di addebito",
+    fields:[F("data","Data e protocollo della contestazione",""),F("fatti","La tua versione dei fatti","In ordine, con date e orari. Solo quello che è accaduto.","area")],
+    body:v=>`Con riferimento alla contestazione di addebito del ${bb(v.data,"data e protocollo")}, espongo quanto segue.\n\n${bd(v.fatti,"la mia versione dei fatti")}\n\nChiedo di essere sentito/a e di essere assistito/a da un rappresentante sindacale o da un legale di mia fiducia. Mi riservo di produrre documenti e ulteriori elementi.`,
+    alert:"Sulla contestazione è scritto un termine per rispondere. Contatta subito il sindacato o un legale e fai leggere loro questa bozza prima di inviarla."},
+  18:{destField:"Sindacato o avvocato a cui la porti", plain:true, og:"relazione dei fatti",
+    fields:[F("cron","I fatti in ordine di data","Una riga per ogni fatto: data, ora, che cosa è successo","area"),F("doc","Documenti che hai","es. email, ordini di servizio, messaggi","area"),F("test","Chi ha assistito (ruoli)",""),F("ob","Che cosa vuoi ottenere","")],
+    body:v=>`CRONOLOGIA\n${bb(v.cron,"i fatti, uno per riga, con data e ora")}\n\nDOCUMENTI DISPONIBILI\n${bb(v.doc,"elenco dei documenti")}\n\nPERSONE CHE HANNO ASSISTITO\n${bb(v.test,"ruoli delle persone presenti")}\n\nCHE COSA CHIEDO\n${bb(v.ob,"risultato che vorrei ottenere")}`,
+    nota:"È l'atto più utile quando la situazione si complica. Resta riservato: lo consegni solo a chi ti assiste."},
+  19:{dest:DS, inst:true, og:"richiesta di incontro",
+    fields:[F("arg","Di che cosa vuoi parlare, in generale",""),F("disp","Quando sei disponibile","")],
+    body:v=>`Chiedo cortesemente un incontro per chiarire una situazione personale che riguarda il mio lavoro${has(v.arg)?": "+v.arg.trim():""}.${has(v.disp)?"\n\nSono disponibile nei seguenti giorni e orari: "+dot(v.disp):""}\n\nRingrazio per l'attenzione.`}
+};
+const me = { nome: store.get("nome") || "", istituto: store.get("istituto") || "", luogo: store.get("luogo") || "" };
+const today = () => { try{ return new Date().toLocaleDateString("it-IT", {day:"numeric", month:"long", year:"numeric"}); }catch(e){ return ""; } };
+let curAct = null, lastDraft = "";
+$("actCats").innerHTML = ACTS.map(c => `<div class="cat">${esc(c.c)}</div><div class="acts">` + c.items.map(it => `<button type="button" class="act" data-n="${it[0]}"><span class="num">${String(it[0]).padStart(2,"0")}</span><span>${esc(it[1])}</span><span class="arr">›</span></button>`).join("") + `</div>`).join("");
+function fieldHTML(f){
+  const id = "af_" + f.id;
+  if(f.type === "select") return `<div><label class="lab" for="${id}">${esc(f.l)}</label><select id="${id}">${f.opts.map(o => `<option>${esc(o)}</option>`).join("")}</select></div>`;
+  if(f.type === "area") return `<div><label class="lab" for="${id}">${esc(f.l)}</label><textarea id="${id}" maxlength="4000" placeholder="${esc(f.ph)}"></textarea></div>`;
+  return `<div><label class="lab" for="${id}">${esc(f.l)}</label><input type="text" id="${id}" maxlength="300" placeholder="${esc(f.ph)}"></div>`;
+}
+function openAct(n){
+  n = Number(n); const d = DEF[n]; if(!d) return;
+  for(const c of ACTS) for(const it of c.items) if(it[0] === n) curAct = {n, t: it[1], cat: c.c, d};
+  $("actCat").textContent = curAct.cat + " · atto " + String(n).padStart(2,"0");
+  $("actTitle").textContent = curAct.t;
+  const fs = (d.destField ? [F("dest", "A chi è indirizzato", d.destField)] : []).concat(d.fields);
+  $("actFields").innerHTML = (d.alert ? `<div class="alert"><b>Prima di tutto</b>${esc(d.alert)}</div>` : "") + fs.map(fieldHTML).join("");
+  $("meNome").value = me.nome; $("meIst").value = me.istituto; $("meLuogo").value = me.luogo; $("meData").value = today();
+  $("actOut").innerHTML = ""; lastDraft = "";
+  $("actList").hidden = true; $("actEdit").hidden = false;
+  window.scrollTo(0, 0);
+}
+$("actCats").addEventListener("click", ev => { const b = ev.target.closest(".act"); if(b){ openAct(b.dataset.n); $("actTitle").focus(); } });
+$("actBack").addEventListener("click", () => { $("actEdit").hidden = true; $("actList").hidden = false; window.scrollTo(0, 0); });
+function compose(){
+  const d = curAct.d, v = {};
+  (d.destField ? [{id:"dest"}] : []).concat(d.fields).forEach(f => { const el = $("af_" + f.id); v[f.id] = el ? el.value : ""; });
+  me.nome = $("meNome").value.trim(); me.istituto = $("meIst").value.trim(); me.luogo = $("meLuogo").value.trim();
+  store.set("nome", me.nome); store.set("istituto", me.istituto); store.set("luogo", me.luogo);
+  const data = $("meData").value.trim();
+  let head;
+  if(d.destField) head = d.plain ? "RELAZIONE DEI FATTI\nper " + bb(v.dest, "sindacato o avvocato") : "A: " + bb(v.dest, "destinatario");
+  else { const lines = d.dest.split("\n"); if(d.inst) lines.splice(1, 0, "dell'Istituto " + bb(me.istituto, "nome Istituto")); head = lines.join("\n"); }
+  const og = typeof d.og === "function" ? d.og(v) : d.og;
+  const who = bb(me.nome, "nome e cognome") + " — collaboratore scolastico";
+  const mid = d.plain ? "Chi scrive: " + who + (has(me.istituto) ? ", in servizio presso " + me.istituto : "") + "\n\n" + d.body(v) : "Oggetto: " + og + ".\n\n" + d.body(v);
+  return head + "\n\n" + mid + "\n\n" + bb(me.luogo, "luogo") + ", " + bb(data, "data") + "\n" + (d.plain ? "[firma]" : who);
+}
+function renderAct(o, improved){
+  const d = curAct.d, h = [];
+  if(o.urgente) h.push(`<div class="alert"><b>Attenzione: c'è un termine da rispettare</b>${esc(o.urgente)}</div>`);
+  h.push(`<div class="card answer"><div class="row" style="justify-content:space-between"><div class="eyebrow">${improved ? "Riscritto dall'assistente" : "Il testo pronto"}</div><button type="button" class="btn ghost" id="actCopy">Copia</button></div><div class="letter">${esc(o.testo)}</div>` +
+    (/\[[^\]]+\]/.test(o.testo) ? `<p class="small muted">Completa a mano i campi tra parentesi quadre.</p>` : "") + `</div>`);
+  const t = [], m = arr(o.mancano);
+  if(m.length) t.push(`<div class="sec"><h3>Da completare a mano</h3><ul class="plain">${m.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`);
+  t.push(`<div class="sec"><h3>Come inviarlo</h3><p>${esc(o.come_inviarlo || (d.plain ? "Non va inviato alla scuola: consegnalo solo a chi ti assiste." : "Consegna a mano con protocollo e copia vistata, oppure invio alla casella istituzionale della scuola. Per gli atti che contano, la data certa vale più del contenuto."))}</p></div>`);
+  const nota = o.nota || d.nota;
+  if(nota) t.push(`<div class="note">${esc(nota)}</div>`);
+  h.push(`<div class="card answer">${t.join("")}</div>`);
+  if(!improved) h.push(`<button type="button" class="btn dark wide" id="actAI" hidden>Riscrivi con l'assistente</button>`);
+  h.push(`<p class="small muted">Rileggi prima di firmare. Quello che firmi è tuo.</p>`);
+  $("actOut").innerHTML = h.join("");
+  $("actCopy").addEventListener("click", () => copyText(o.testo));
+  const ab = $("actAI");
+  if(ab){ aiReady.then(s => { if(s && $("actAI") === ab) ab.hidden = false; }); ab.addEventListener("click", improve); }
+}
+$("actForm").addEventListener("submit", ev => {
+  ev.preventDefault(); if(!curAct) return;
+  lastDraft = compose();
+  renderAct({testo: lastDraft}, false);
+  $("actOut").scrollIntoView({behavior:"smooth", block:"start"});
+});
+let writing = false;
+async function improve(){
+  if(writing || !lastDraft) return;
+  writing = true;
+  const out = $("actOut"), draft = lastDraft;
+  out.innerHTML = loaderHTML("Sto rivedendo l'atto…");
+  const content = KNOW + "\n\nRivedi questa bozza di atto (" + curAct.t + "). Migliora chiarezza, ordine e forma. Non aggiungere fatti, non togliere né riempire i campi tra parentesi quadre, non aggiungere citazioni normative di cui non sei certo. " + FMT_ACT + "\n\nBOZZA:\n" + draft;
+  try{
+    const o = parseJSON(await callAI([{role:"user", content}]));
+    if(o && has(o.testo)) renderAct(o, true);
+    else { renderAct({testo: draft}, false); toast("Non sono riuscita a riscriverlo: resta la tua bozza"); }
+  }catch(e){
+    renderAct({testo: draft}, false);
+    if(!(e && e.name === "AbortError")) toast(e && e.code === "rate_limited" ? "Troppe richieste: riprova tra un minuto" : "Assistente non raggiungibile: resta la tua bozza");
+  }
+  writing = false;
+}
+
+/* ---------- ORIENTATI (guida per argomento, sul dispositivo) ---------- */
+const TOPICS = [
+  {t:"Mansioni: mi compete o no?", g:["Pulizia di locali, spazi scolastici e arredi","Sorveglianza degli alunni quando il docente è momentaneamente assente","Accoglienza e sorveglianza del pubblico, custodia dei locali","Aiuto materiale agli alunni con disabilità per entrare, uscire e usare i servizi igienici","Assistenza ai bambini di infanzia e primaria nei servizi igienici e nell'igiene personale"],
+    r:["Dare un farmaco su richiesta verbale di un collega","Assistenza specialistica all'autonomia e alla comunicazione: è personale dell'ente locale o della cooperativa","Manutenzione e guasti dell'edificio: spettano al Comune o alla Provincia"],
+    y:["Gli incarichi aggiuntivi retribuiti e tutto ciò che dipende dal contratto d'istituto o da un ordine di servizio"],
+    chi:"DSGA", p:"L'organizzazione interna decide quando e dove lavori. Non può assegnarti mansioni fuori dal profilo scritto nel contratto nazionale.", a:[1,2,12]},
+  {t:"Orario, turni, ferie e permessi", chi:"DSGA per turni e orario · Dirigente Scolastico per ferie e permessi", p:"Turni, flessibilità, recuperi e criteri cambiano da scuola a scuola: sono scritti nel contratto d'istituto e nel piano delle attività. Chiedi di vederli.", a:[3,5,4]},
+  {t:"Supplenze, graduatorie e carriera", chi:"Ambito Territoriale · sindacato territoriale per l'assistenza", p:"Regole, punteggi e scadenze cambiano ogni anno. Vale solo il bando in vigore, pubblicato sul sito dell'Ambito Territoriale.", a:[15,16]},
+  {t:"Stipendio e cedolino", chi:"Segreteria – ufficio personale · NoiPA per il cedolino", p:"Per una voce che non torna parti dalla segreteria, con il mese e la voce precisa.", a:[6]},
+  {t:"Sicurezza e salute", chi:"Dirigente Scolastico · RLS e RSPP · medico competente", p:"Rischi, guasti e dispositivi mancanti si segnalano per iscritto. Sulla tua idoneità decide il medico competente, non la scuola.", a:[7,8,9,10]},
+  {t:"Alunni e famiglie", chi:"DSGA · Dirigente Scolastico per farmaci e casi particolari", p:"Sorveglianza e assistenza igienica di base rientrano nel profilo. I farmaci richiedono una procedura autorizzata dal Dirigente. I dati sulla salute degli alunni non vanno diffusi né discussi fuori dalle sedi previste.", a:[1]},
+  {t:"Ordini di servizio, contestazioni e conflitti", chi:"DSGA e Dirigente, poi RSU o sindacato", p:"Un ordine si esegue, e hai diritto di chiedere che ti sia confermato per iscritto. La strada corretta è sempre: chiarimento diretto, richiesta scritta, poi RSU o sindacato.", a:[2,13,14,17,18,19], lv:true}
+];
+const actName = n => { for(const c of ACTS) for(const it of c.items) if(it[0] === n) return it[1]; return ""; };
+const lightHTML = (cls, title, items) => items && items.length ? `<div class="light ${cls}"><span class="dot"></span><div><div class="t">${title}</div><ul>${items.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></div>` : "";
+$("topicList").innerHTML = TOPICS.map(t => `<details class="topic"><summary>${esc(t.t)}</summary><div class="tb">` +
+  ((t.g || t.r || t.y) ? `<div class="lights">${lightHTML("g","TI COMPETE",t.g)}${lightHTML("r","NON TI COMPETE",t.r)}${lightHTML("y","ZONA GRIGIA",t.y)}</div>` : "") +
+  `<div class="sec"><h3>A chi rivolgerti</h3><p>${esc(t.chi)}</p></div><p>${esc(t.p)}</p>` +
+  `<div class="sec"><h3>L'atto che ti serve</h3><div class="acts">${t.a.map(n => `<button type="button" class="act" data-open="${n}"><span class="num">${String(n).padStart(2,"0")}</span><span>${esc(actName(n))}</span><span class="arr">›</span></button>`).join("")}</div></div>` +
+  (t.lv ? `<a class="btn ghost" href="#livello">Valuta quanto è seria</a>` : "") + `</div></details>`).join("");
+$("topicList").addEventListener("click", ev => { const b = ev.target.closest("[data-open]"); if(!b) return; openAct(b.dataset.open); location.hash = "#atti"; });
+
+/* ---------- LIVELLO ---------- */
+$("checks").innerHTML = CHECKS.map((c, i) => `<label class="check"><input type="checkbox" id="ck${i}" data-i="${i}"><span>${esc(c.t)}</span></label>`).join("");
+function updateLevel(){
+  let lv = 0, urgent = false;
+  document.querySelectorAll("#checks input:checked").forEach(el => { const c = CHECKS[Number(el.dataset.i)]; if(c.l > lv) lv = c.l; if(c.urgent) urgent = true; });
+  const L = LEVELS[lv];
+  $("lvlNow").innerHTML = `<div class="eyebrow">Il tuo livello adesso</div><div class="lvl" style="margin-top:8px"><div class="n l${L.n}">${L.n}</div><div><b style="font-size:17px">${esc(L.t)}</b><div class="small muted">${esc(L.d)}</div></div></div>` + (lv >= 4 ? `<p class="small" style="margin-top:10px">Scrivi comunque la relazione dei fatti (atto 18): presentarsi preparati, in quelle sedi, vale moltissimo.</p>` : "");
+  $("lvlAlert").innerHTML = urgent ? `<div class="alert"><b>C'è un termine: il tempo è contato</b>Guarda il termine scritto sull'atto e contatta subito il sindacato o un legale. Aspettare non è mai la risposta giusta quando un termine è già partito.</div>` : "";
+  $("ladder").innerHTML = LEVELS.map(x => `<div class="step${x.n === lv ? " cur" : ""}"><div class="n l${x.n}">${x.n}</div><div class="x"><b>${esc(x.t)}</b><span>${esc(x.d)}</span></div></div>`).join("");
+}
+$("checks").addEventListener("change", updateLevel);
+$("lvlReset").addEventListener("click", () => { document.querySelectorAll("#checks input").forEach(el => el.checked = false); updateLevel(); });
+updateLevel();
+
+/* ---------- A CHI ---------- */
+const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+function renderPeople(){
+  const words = norm($("chiQ").value).split(/\s+/).filter(w => w.length > 1);
+  const list = PEOPLE.filter(p => { const hay = norm(p.n + " " + p.r + " " + p.d + " " + p.k); return words.every(w => hay.includes(w)); });
+  $("people").innerHTML = list.length ? list.map(p => `<div class="person"><h3>${esc(p.n)}</h3><div class="role">${esc(p.r)}</div><p class="small">${esc(p.d)}</p></div>`).join("")
+    : `<div class="card"><b>Nessuna figura trovata</b><p class="small muted">Prova con una parola sola, oppure racconta il caso nella sezione Chiedi.</p></div>`;
+}
+$("chiQ").addEventListener("input", renderPeople);
+renderPeople();
+
+/* ---------- navigazione ---------- */
+const VIEWS = ["chiedi", "atti", "livello", "chi"];
+function route(){
+  const h = (location.hash || "").replace("#", "");
+  const v = VIEWS.includes(h) ? h : "chiedi";
+  VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === v));
+  document.querySelectorAll(".tabs a").forEach(a => { if(a.dataset.v === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+route();
+
+/* ---------- informazioni ---------- */
+const dlg = $("info");
+$("infoBtn").addEventListener("click", () => { if(typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", ""); });
+$("infoClose").addEventListener("click", () => { if(typeof dlg.close === "function") dlg.close(); else dlg.removeAttribute("open"); });
+dlg.addEventListener("click", ev => { if(ev.target === dlg && typeof dlg.close === "function") dlg.close(); });
+</script>
+</body>
+</html>
