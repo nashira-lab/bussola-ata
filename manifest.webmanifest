@@ -1,0 +1,16 @@
+{
+  "name": "Bussola ATA",
+  "short_name": "Bussola ATA",
+  "description": "Mansioni, interlocutori e atti pronti per collaboratori scolastici ATA. Nashira Studio, di Marco Perini.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0A1D3B",
+  "theme_color": "#0A1D3B",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

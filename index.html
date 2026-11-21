@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bussola ATA</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0A1D3B">
+<meta name="apple-mobile-web-app-title" content="Bussola ATA">
+<meta name="application-name" content="Bussola ATA">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -340,7 +350,7 @@ dialog::backdrop{background:rgba(10,29,59,.6)}
       <p class="small">Atti, Livello, A chi e la guida per argomento funzionano sul tuo dispositivo, senza inviare nulla. Nome, istituto e luogo, se li scrivi, restano salvati solo qui. Quello che scrivi nel riquadro «Chiedi» raggiunge un'IA solo quando tocchi Chiedi a Bussola, Gemini o Claude; con Gemini e Claude la domanda passa nella loro app, con il tuo account.</p>
     </div>
     <div class="quote">Sapere che cosa ti compete non serve a fare di meno. Serve a farlo meglio, e a farlo con la schiena dritta.</div>
-    <p class="small muted">© 2026 Marco Perini · Nashira Studio · edizione ATA-WEB-1.2-MP-2611<br>Segnalazioni e suggerimenti: su Telegram scrivi al bot <a href="https://t.me/StudioNashirabot">@StudioNashirabot</a></p>
+    <p class="small muted">© 2026 Marco Perini · Nashira Studio · edizione ATA-WEB-1.3-MP-2611<br>Segnalazioni e suggerimenti: su Telegram scrivi al bot <a href="https://t.me/StudioNashirabot">@StudioNashirabot</a></p>
     <button class="btn dark wide" id="infoClose">Chiudi</button>
   </div>
 </dialog>
@@ -430,21 +440,23 @@ const QUESTIONS = [
   "Mi hanno chiesto di firmare un ordine di servizio che non ho capito."
 ];
 const EXAMPLE = {
-  in_due_righe:"No, non sei obbligata. Dare un farmaco a scuola non rientra tra le mansioni del profilo e non può essere disposto con un ordine verbale di un'insegnante.",
+  in_due_righe:"No. Dare farmaci non è una tua mansione, e un ordine a voce non basta.",
   semaforo:{
-    non_compete:["Somministrare un farmaco su richiesta verbale di un collega."],
-    zona_grigia:["La disponibilità volontaria, quando esistono la richiesta della famiglia, la certificazione del medico e l'autorizzazione scritta del Dirigente."],
-    compete:["Avvisare subito chi di dovere e vigilare sul bambino, come sempre."]},
-  a_chi:{figura:"DSGA", perche:"È chi organizza il tuo lavoro. Se la famiglia ha già consegnato dei documenti, la questione passa al Dirigente Scolastico, l'unico che può autorizzare la procedura."},
-  come:"Per iscritto, con una mail breve: serve a te per non restare sola davanti a una responsabilità che non è tua, e serve alla scuola per attivare la strada corretta.",
-  testo_pronto:{tipo:"atto", titolo:"Il testo pronto", testo:"Al Direttore dei Servizi Generali e Amministrativi\np.c. al Dirigente Scolastico dell'Istituto [nome Istituto]\n\nOggetto: richiesta di indicazioni sulla somministrazione di farmaci in orario scolastico.\n\nIn data [data], intorno alle ore [orario], mi è stato chiesto verbalmente di somministrare un farmaco a un alunno della classe [classe]. Non risultandomi che la richiesta rientri tra i compiti del mio profilo, e non essendo a conoscenza di un'autorizzazione formale, chiedo cortesemente indicazioni scritte su come devo comportarmi in casi analoghi. Resto a disposizione per ogni chiarimento.\n\n[luogo], [data]\n[nome e cognome] — collaboratore scolastico"},
-  livello:{n:1, motivo:"Serve una traccia scritta, niente di più."},
-  se_no:"Se non rispondono: istanza protocollata e, se la cosa si ripete, un passaggio dalla RSU.",
-  da_verificare:["Se esiste già un protocollo interno per la somministrazione dei farmaci e chi ha dato la disponibilità."]
+    non_compete:["Dare il farmaco su richiesta a voce"],
+    zona_grigia:["Farlo volontariamente, solo con autorizzazione scritta del Dirigente"],
+    compete:["Avvisare subito e sorvegliare il bambino"]},
+  a_chi:{figura:"DSGA", perche:"Organizza il tuo lavoro e attiva la procedura con il Dirigente."},
+  come:"Per iscritto, con una mail breve.",
+  testo_pronto:{tipo:"atto", titolo:"Il testo pronto", testo:"Al Direttore dei Servizi Generali e Amministrativi\np.c. al Dirigente Scolastico dell'Istituto [nome Istituto]\n\nOggetto: indicazioni sulla somministrazione di farmaci.\n\nIn data [data], alle ore [orario], mi è stato chiesto a voce di dare un farmaco a un alunno. Non mi risulta che rientri nel mio profilo, né che esista un'autorizzazione. Chiedo indicazioni scritte su come comportarmi.\n\n[luogo], [data]\n[nome e cognome] — collaboratore scolastico"},
+  livello:{n:1, motivo:"Basta una richiesta scritta."},
+  se_no:"Se non rispondono, sollecito protocollato.",
+  da_verificare:[]
 };
 
 /* ---------- istruzioni per l'assistente ---------- */
 const KNOW = `Sei Bussola ATA, assistente per i collaboratori scolastici della scuola statale italiana. Chi scrive non è un giurista: vuole capire in fretta che cosa le compete, a chi rivolgersi e che cosa scrivere o dire, senza creare tensioni inutili. Usa un italiano semplice, concreto e rispettoso. Quando citi una norma, traducila subito in parole comuni.
+
+BREVITÀ, prima di tutto: chi legge deve capire in dieci secondi, anche dal telefono. Apri sempre con una risposta netta: «Sì», «No» oppure «Dipende da…» seguito dalla condizione. Una sola idea per frase, frasi di 15 parole al massimo, parole di tutti i giorni. Niente premesse, niente giri di parole, niente ripetizioni, niente elenchi di norme. Se una parte non serve, toglila.
 
 FONTI, in quest'ordine: 1) legge (Testo Unico della scuola D.Lgs. 297/1994, D.Lgs. 165/2001, L. 104/1992, D.Lgs. 151/2001 su maternità e congedi, D.Lgs. 81/2008 sulla sicurezza, L. 241/1990 sull'accesso agli atti); 2) contratto nazionale del comparto Istruzione e Ricerca con la tabella dei profili, dove sono scritte le mansioni; 3) contratto integrativo d'istituto (turni, criteri, incarichi, compensi: cambia da scuola a scuola e ogni anno); 4) organizzazione interna (piano delle attività, ordini di servizio, circolari). I livelli 3 e 4 decidono quando e dove si lavora, non possono assegnare mansioni fuori dal profilo nazionale.
 
@@ -469,15 +481,16 @@ REGOLE:
 const FMT_ASK = `Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo e senza markdown. Campi (usa null o [] quando non servono):
 {"urgente": null oppure una frase d'avviso se c'è un termine da rispettare,
  "domanda": null oppure UNA sola domanda di chiarimento se senza quel dato non puoi rispondere in modo utile,
- "in_due_righe": "la risposta secca",
- "norma": "che cosa dice la regola, in parole comuni",
- "semaforo": {"compete": ["..."], "non_compete": ["... e di chi è la competenza"], "zona_grigia": ["..."]},
- "a_chi": {"figura": "una sola figura", "perche": "il motivo", "riserva": "a chi passare se non risponde, oppure null"},
- "come": "canale, forma, tempi, se conviene lasciare traccia scritta",
- "testo_pronto": null oppure {"tipo": "atto" o "frase", "titolo": "titolo breve", "testo": "l'atto completo, con a capo veri, oppure la frase esatta da dire a voce"},
- "livello": null oppure {"n": numero da 0 a 6, "motivo": "perché"},
- "se_no": "il passo successivo se dicono di no o non rispondono",
- "da_verificare": ["che cosa dipende dal contratto d'istituto o dalla prassi locale"]}`;
+ "in_due_righe": "massimo due frasi brevi; comincia con Sì, No o Dipende da…",
+ "norma": null oppure UNA frase che dice la regola in parole comuni, solo se aiuta a capire,
+ "semaforo": {"compete": ["..."], "non_compete": ["... e di chi è"], "zona_grigia": ["..."]} (al massimo 2 voci per colore, ognuna di poche parole; lascia vuoti i colori che non servono),
+ "a_chi": {"figura": "una sola figura", "perche": "una frase", "riserva": null oppure la figura a cui passare se non risponde},
+ "come": "una frase: a voce o per iscritto, e come",
+ "testo_pronto": null oppure, solo se serve davvero, {"tipo": "atto" o "frase", "titolo": "titolo breve", "testo": "l'atto breve e completo, con a capo veri, oppure la frase esatta da dire a voce"},
+ "livello": null oppure {"n": numero da 0 a 6, "motivo": "poche parole"},
+ "se_no": null oppure una frase con il passo successivo,
+ "da_verificare": [] oppure al massimo 1 voce breve su ciò che dipende dalla tua scuola}
+Ogni frase deve dire una cosa nuova: non ripetere nei campi quello che hai già scritto.`;
 
 const FMT_ACT = `Scrivi l'atto richiesto, completo dalla prima all'ultima riga. Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo e senza markdown:
 {"urgente": null oppure una frase d'avviso se c'è un termine da rispettare,
@@ -569,7 +582,7 @@ function renderAnswer(o, opts){
   if(o.urgente) h.push(`<div class="alert"><b>Attenzione: c'è un termine da rispettare</b>${esc(o.urgente)}</div>`);
   if(o.domanda) h.push(`<div class="note"><b>Mi serve un dato in più</b><br>${esc(o.domanda)}</div>`);
   const parts = [];
-  if(o.in_due_righe) parts.push(`<div class="sec"><div class="eyebrow">In due righe</div><p class="lead">${esc(o.in_due_righe)}</p></div>`);
+  if(o.in_due_righe) parts.push(`<div class="sec"><div class="eyebrow">In breve</div><p class="lead">${esc(o.in_due_righe)}</p></div>`);
   const s = o.semaforo || {}, g = arr(s.compete), r = arr(s.non_compete), y = arr(s.zona_grigia);
   const li = a => "<ul>" + a.map(x => `<li>${esc(x)}</li>`).join("") + "</ul>";
   if(g.length || r.length || y.length){
@@ -648,8 +661,13 @@ $("askForm").addEventListener("submit", ev => {
   if(!aiOn){ toast("Scegli Gemini o Claude qui sotto"); return; }
   ask(v, false);
 });
-const FMT_TXT = `Rispondi in italiano, con testo semplice e queste sezioni, saltando quelle che non servono:
-IN DUE RIGHE · LA REGOLA, IN PAROLE COMUNI · SEMAFORO (🟢 ti compete, 🔴 non ti compete e di chi è la competenza, 🟡 zona grigia) · A CHI RIVOLGERTI (una sola figura, con il motivo) · COME CHIEDERLO · TESTO PRONTO (l'atto completo oppure la frase esatta da dire) · LIVELLO DI INTERVENTO · SE TI DICONO DI NO · DA VERIFICARE NELLA TUA SCUOLA.
+const FMT_TXT = `Rispondi in italiano semplice e in modo BREVE: al massimo 100 parole, senza contare il testo pronto. Niente introduzione, niente saluti, niente riepilogo finale.
+Usa solo queste sezioni, in quest'ordine, e salta quelle che non servono:
+RISPOSTA: Sì, No o Dipende da…, più una frase.
+🟢 / 🔴 / 🟡: al massimo 2 voci per colore, poche parole ciascuna.
+A CHI: una sola figura e il motivo in una frase.
+COSA FARE: al massimo 3 passi numerati, una riga ciascuno.
+TESTO PRONTO: solo se serve, breve e completo.
 Se ti manca un dato indispensabile, fai una sola domanda e poi rispondi.`;
 function handoffText(){
   const c = [ctx.ordine && "Ordine di scuola: " + ctx.ordine, ctx.contr && "Contratto: " + ctx.contr].filter(Boolean).join(" · ") || "Ordine di scuola e contratto non indicati";
