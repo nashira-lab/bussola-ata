@@ -804,7 +804,7 @@ function compose(){
   const data = $("meData").value.trim();
   let head;
   if(d.destField) head = d.plain ? "RELAZIONE DEI FATTI\nper " + bb(v.dest, "sindacato o avvocato") : "A: " + bb(v.dest, "destinatario");
-  else { const lines = d.dest.split("\n"); if(d.inst) lines.splice(1, 0, "dell'Istituto " + bb(me.istituto, "nome Istituto")); head = lines.join("\n"); }
+  else { const lines = d.dest.split("\n"); if(d.inst) lines.splice(1, 0, /^istituto\b/i.test(me.istituto) ? "dell'" + me.istituto.charAt(0).toUpperCase() + me.istituto.slice(1) : "dell'Istituto " + bb(me.istituto, "nome Istituto")); head = lines.join("\n"); }
   const og = typeof d.og === "function" ? d.og(v) : d.og;
   const who = bb(me.nome, "nome e cognome") + " — collaboratore scolastico";
   const mid = d.plain ? "Chi scrive: " + who + (has(me.istituto) ? ", in servizio presso " + me.istituto : "") + "\n\n" + d.body(v) : "Oggetto: " + og + ".\n\n" + d.body(v);
