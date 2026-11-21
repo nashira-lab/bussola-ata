@@ -175,6 +175,11 @@ dialog::backdrop{background:rgba(10,29,59,.6)}
 .dlg-b h3{font-size:15px;margin-bottom:4px}
 .dlg-b ol,.dlg-b ul{margin:0;padding-left:20px}
 .quote{background:var(--navy);color:#fff;border-top:4px solid var(--orange);border-radius:12px;padding:16px;text-align:center;font-size:15px}
+.consent{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;width:calc(100% - 24px);max-width:536px;background:var(--navy);color:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 10px 30px rgba(10,29,59,.35);z-index:10;font-size:13px;line-height:1.45}
+.consent b{display:block;font-size:14px;margin-bottom:4px}
+.consent .row{display:flex;gap:8px;margin-top:10px}
+.consent .row .btn{flex:1;padding:10px 12px}
+.consent .btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.45)}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;z-index:9;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){.busy .rose .needle,.loader .needle{animation:none}.toast{transition:none}}
@@ -349,11 +354,19 @@ dialog::backdrop{background:rgba(10,29,59,.6)}
     <div><h3>Riservatezza</h3>
       <p class="small">Atti, Livello, A chi e la guida per argomento funzionano sul tuo dispositivo, senza inviare nulla. Nome, istituto e luogo, se li scrivi, restano salvati solo qui. Quello che scrivi nel riquadro «Chiedi» raggiunge un'IA solo quando tocchi Chiedi a Bussola, Gemini o Claude; con Gemini e Claude la domanda passa nella loro app, con il tuo account.</p>
     </div>
+    <div><h3>Cookie e statistiche</h3>
+      <p class="small">Solo se accetti, Google Analytics conta visite e azioni (sezioni aperte, atti composti, tocchi su Gemini e Claude). Non riceve mai il testo che scrivi né i tuoi dati. <a href="#" id="consentEdit">Cambia la tua scelta</a></p>
+    </div>
     <div class="quote">Sapere che cosa ti compete non serve a fare di meno. Serve a farlo meglio, e a farlo con la schiena dritta.</div>
-    <p class="small muted">© 2026 Marco Perini · Nashira Studio · edizione ATA-WEB-1.3-MP-2611<br>Segnalazioni e suggerimenti: su Telegram scrivi al bot <a href="https://t.me/StudioNashirabot">@StudioNashirabot</a></p>
+    <p class="small muted">© 2026 Marco Perini · Nashira Studio · edizione ATA-WEB-1.4-MP-2611<br>Segnalazioni e suggerimenti: su Telegram scrivi al bot <a href="https://t.me/StudioNashirabot">@StudioNashirabot</a></p>
     <button class="btn dark wide" id="infoClose">Chiudi</button>
   </div>
 </dialog>
+<div class="consent" id="consent" role="dialog" aria-labelledby="consentT" hidden>
+  <b id="consentT">Statistiche di utilizzo</b>
+  Vorrei contare quante persone usano Bussola e quali sezioni servono di più, con Google Analytics. Non leggo mai quello che scrivi. Accetti i cookie statistici?
+  <div class="row"><button type="button" class="btn ghost" id="consentNo">Rifiuta</button><button type="button" class="btn" id="consentYes">Accetta</button></div>
+</div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -507,9 +520,32 @@ const store = {
   get(k){ try{ return localStorage.getItem("bussola." + k); }catch(e){ return null; } },
   set(k,v){ try{ localStorage.setItem("bussola." + k, v); }catch(e){} }
 };
+/* ---------- statistiche (Google Analytics, solo con consenso) ---------- */
+const GA_ID = "G-7QMTFEQK4S";
+const GA_HOST = location.hostname === "nashira-lab.github.io";
+let gaOn = false;
+function gaLoad(){
+  if(gaOn || !GA_HOST) return;
+  gaOn = true;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ dataLayer.push(arguments); };
+  gtag("consent", "default", {analytics_storage:"granted", ad_storage:"denied", ad_user_data:"denied", ad_personalization:"denied"});
+  gtag("js", new Date());
+  gtag("config", GA_ID, {allow_google_signals:false, allow_ad_personalization_signals:false});
+  const sc = document.createElement("script"); sc.async = true; sc.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID; document.head.appendChild(sc);
+}
+function track(name, params){ try{ if(gaOn && window.gtag) gtag("event", name, params || {}); }catch(e){} }
+function consentInit(){
+  if(!GA_HOST) return;
+  const c = store.get("consenso");
+  if(c === "si") gaLoad(); else if(c !== "no") $("consent").hidden = false;
+  $("consentYes").addEventListener("click", () => { store.set("consenso", "si"); $("consent").hidden = true; gaLoad(); });
+  $("consentNo").addEventListener("click", () => { store.set("consenso", "no"); $("consent").hidden = true; });
+}
 let toastT;
 function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2200); }
 async function copyText(text){
+  track("copia_testo", {sezione: (location.hash || "#chiedi").slice(1) || "chiedi"});
   try{ await navigator.clipboard.writeText(text); toast("Copiato"); return; }catch(e){}
   try{
     const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly",""); ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -628,6 +664,7 @@ let asking = false;
 async function ask(text, follow){
   if(asking) return;
   asking = true;
+  track("chiedi_bussola", {seguito: follow ? "si" : "no"});
   const box = $("answerBox"), btn = $("askBtn");
   btn.disabled = true; $("shell").classList.add("busy");
   let content;
@@ -687,6 +724,7 @@ function handoff(ev, which){
   if(!$("q").value.trim()){ ev.preventDefault(); $("q").focus(); toast("Scrivi prima che cosa è successo"); return; }
   const text = handoffText();
   const ok = copyNow(text);
+  track("chiedi_ia", {ia: which});
   a.href = which === "claude" ? "https://claude.ai/new?q=" + encodeURIComponent(text) : "https://gemini.google.com/app";
   toast(ok ? "Domanda copiata: incollala e invia" : "Copia non riuscita: riprova");
 }
@@ -695,6 +733,7 @@ $("goClaude").addEventListener("click", ev => handoff(ev, "claude"));
 $("chips").innerHTML = QUESTIONS.map((q, i) => `<button type="button" class="chip" data-i="${i}">${esc(q)}</button>`).join("");
 $("chips").addEventListener("click", ev => {
   const b = ev.target.closest(".chip"); if(!b) return;
+  track("domanda_esempio", {n: Number(b.dataset.i) + 1});
   $("q").value = QUESTIONS[Number(b.dataset.i)]; $("q").focus(); window.scrollTo({top:0, behavior:"smooth"});
 });
 
@@ -831,6 +870,7 @@ function renderAct(o, improved){
 $("actForm").addEventListener("submit", ev => {
   ev.preventDefault(); if(!curAct) return;
   lastDraft = compose();
+  track("atto_composto", {atto: String(curAct.n).padStart(2, "0"), titolo: curAct.t});
   renderAct({testo: lastDraft}, false);
   $("actOut").scrollIntoView({behavior:"smooth", block:"start"});
 });
@@ -907,6 +947,7 @@ function route(){
   VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === v));
   document.querySelectorAll(".tabs a").forEach(a => { if(a.dataset.v === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   window.scrollTo(0, 0);
+  track("apri_sezione", {sezione: v});
 }
 window.addEventListener("hashchange", route);
 route();
@@ -916,6 +957,15 @@ const dlg = $("info");
 $("infoBtn").addEventListener("click", () => { if(typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", ""); });
 $("infoClose").addEventListener("click", () => { if(typeof dlg.close === "function") dlg.close(); else dlg.removeAttribute("open"); });
 dlg.addEventListener("click", ev => { if(ev.target === dlg && typeof dlg.close === "function") dlg.close(); });
+$("consentEdit").addEventListener("click", ev => {
+  ev.preventDefault();
+  if(typeof dlg.close === "function") dlg.close();
+  if(!GA_HOST){ toast("Le statistiche sono attive solo sul sito pubblico"); return; }
+  if(store.get("consenso") === "si"){ store.set("consenso", ""); location.reload(); return; }
+  $("consent").hidden = false;
+});
+document.querySelectorAll("#topicList details").forEach(d => d.addEventListener("toggle", () => { if(d.open) track("tema_aperto", {tema: d.querySelector("summary").textContent}); }));
+consentInit();
 </script>
 </body>
 </html>

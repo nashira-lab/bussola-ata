@@ -17,4 +17,4 @@ I contenuti sono un orientamento generale: verifica sempre il contratto e le reg
 Segnalazioni: bot Telegram [@StudioNashirabot](https://t.me/StudioNashirabot)
 
 ---
-Nashira Studio · di Marco Perini · edizione ATA-WEB-1.3-MP-2611
+Nashira Studio · di Marco Perini · edizione ATA-WEB-1.4-MP-2611
